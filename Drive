@@ -1,0 +1,45 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/*    Module:       main.cpp                                                  */
+/*    Author:       John Schmidt                                              */
+/*    Created:      Mon Mar 25 2019                                           */
+/*    Description:  V5 project                                                */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+// Arcade Control
+// This program uses remote control values to move the robot.
+//
+// Robot Configuration:
+//
+//
+#include "vex.h"
+#include <string>
+
+using namespace vex;
+
+// A global instance of vex::brain used for printing to the V5 brain screen
+vex::brain       Brain;
+
+// define your global instances of motors and other devices here
+vex::motor LeftFront         = vex::motor( vex::PORT11 );
+vex::motor LeftBack          = vex::motor( vex::PORT20 );
+vex::motor RightFront         = vex::motor( vex::PORT1 );
+vex::motor RightBack         = vex::motor( vex::PORT10 );
+
+vex::controller Controller1          = vex::controller();
+
+int main() {
+
+  while(1) {
+
+    // Drive Control
+    LeftFront.spin(vex::directionType::fwd, (Controller1.Axis1.value() + Controller1.Axis3.value())/2, vex::velocityUnits::pct);
+    LeftBack.spin(vex::directionType::fwd, (Controller1.Axis1.value() + Controller1.Axis3.value())/2, vex::velocityUnits::pct);
+    RightFront.spin(vex::directionType::fwd, (Controller1.Axis1.value() - Controller1.Axis3.value())/2, vex::velocityUnits::pct);
+    RightBack.spin(vex::directionType::fwd, (Controller1.Axis1.value() - Controller1.Axis3.value())/2, vex::velocityUnits::pct);
+
+    // Sleep the task for a short amount of time to prevent wasted resources.
+    vex::task::sleep(20);
+
+  }
+}
