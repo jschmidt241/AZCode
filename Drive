@@ -41,9 +41,9 @@ int main() {
     RightBack.spin(vex::directionType::fwd, (Controller1.Axis1.value() - Controller1.Axis3.value())/2, vex::velocityUnits::pct);
 
     if(Controller1.ButtonA.pressing()){
-      TrayMotor.startRotateTo(-20, vex::rotationUnits::rev, 30, vex::velocityUnits::pct);
+      TrayMotor.startRotateTo(-20, vex::rotationUnits::rev, 10, vex::velocityUnits::pct);
     } else if(Controller1.ButtonB.pressing()){
-      TrayMotor.startRotateTo(20, vex::rotationUnits::rev, 30, vex::velocityUnits::pct);
+      TrayMotor.startRotateTo(20, vex::rotationUnits::rev, 10, vex::velocityUnits::pct);
     } else {
       TrayMotor.stop(vex::brakeType::hold);
     }
