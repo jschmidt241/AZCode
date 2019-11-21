@@ -34,6 +34,8 @@ int selected;
 int x;
 int y;
 
+bool troubleshooting = false;
+
 void gui() {  
   Brain.Screen.clearScreen();
   Brain.Screen.clearLine();
@@ -89,18 +91,45 @@ void gui() {
   }
 }
 
+void setup(){
+  TrayMotor.resetRotation();
+
+}
+
+void drive(){
+  RightBack.startRotateTo(1,vex::rotationUnits::rev);
+  LeftBack.startRotateTo(1,vex::rotationUnits::rev);
+  RightFront.startRotateTo(1,vex::rotationUnits::rev);
+  LeftFront.startRotateTo(1,vex::rotationUnits::rev);
+}
+
+void stop(){
+  RightBack.stop();
+  LeftBack.stop();
+  RightFront.stop();
+  LeftFront.stop();
+}
+
 int main() {
   vexcodeInit();
+  setup();
   
   while(correct < 1){
-    correct = -1;
+    correct = 1; //change
     selected = -1;
-    gui();
-  }
-
+    //gui(); 
+  } 
+  
   Brain.Screen.clearScreen();
   Brain.Screen.clearLine();
   Brain.Screen.printAt(5,20,true, "Program selected: %d", selected);
+
+  LeftIntake.setVelocity(100, vex::velocityUnits::pct);
+  RightIntake.setVelocity(100, vex::velocityUnits::pct);
+  LeftBack.setVelocity(50, vex::velocityUnits::pct);
+  RightBack.setVelocity(50, vex::velocityUnits::pct);
+  LeftFront.setVelocity(50, vex::velocityUnits::pct);
+  RightFront.setVelocity(50, vex::velocityUnits::pct);
 
   while(1) {
 
@@ -111,25 +140,32 @@ int main() {
     RightBack.spin(vex::directionType::fwd, (Controller1.Axis1.value() - Controller1.Axis3.value())/2, vex::velocityUnits::pct);
 
     if(Controller1.ButtonA.pressing()){
-      TrayMotor.startRotateTo(-20, vex::rotationUnits::rev, 10, vex::velocityUnits::pct);
+      TrayMotor.spin(vex::directionType::rev, 10, vex::velocityUnits::pct);
     } else if(Controller1.ButtonB.pressing()){
-      TrayMotor.startRotateTo(20, vex::rotationUnits::rev, 10, vex::velocityUnits::pct);
-    } else {
+      TrayMotor.spin(vex::directionType::fwd, 60, vex::velocityUnits::pct);
+    } else if(Controller1.ButtonL2.pressing() && TrayMotor.rotation(vex::rotationUnits::deg) > -360){
+      //Doesn't stop if this pressed - allows the tray motor to move when arm motor goes up until it reaches -366deg
+    } 
+    else {
       TrayMotor.stop(vex::brakeType::hold);
     }
 
     if(Controller1.ButtonL1.pressing()){
-      ArmMotor.startRotateTo(25, vex::rotationUnits::rev, 100, vex::velocityUnits::pct);
+      ArmMotor.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
     } else if(Controller1.ButtonL2.pressing()){
-      ArmMotor.startRotateTo(-25, vex::rotationUnits::rev, 100, vex::velocityUnits::pct);
+      ArmMotor.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
+      if(TrayMotor.rotation(vex::rotationUnits::deg) > -360){
+        TrayMotor.spin(vex::directionType::rev, 40, vex::velocityUnits::pct);
+      }
     } else {
       ArmMotor.stop(vex::brakeType::hold);
+
     }
 
-    if(Controller1.ButtonR1.pressing()){
+    if(Controller1.ButtonR1.pressing()){ //intake
       LeftIntake.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
       RightIntake.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
-    } else if(Controller1.ButtonR2.pressing()){
+    } else if(Controller1.ButtonR2.pressing()){ //outtake
       LeftIntake.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
       RightIntake.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
     } else {
