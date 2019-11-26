@@ -3,7 +3,7 @@
 /*    Module:       main.cpp                                                  */
 /*    Author:       John Schmidt                                              */
 /*    Created:      Tue Nov 12 2019                                           */
-/*    Description:  V5 project-PID                                            */
+/*    Description:  V5 project                                                */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 // Arcade Control
@@ -29,9 +29,40 @@ vex::motor RightIntake        = vex::motor( vex::PORT9 );
 vex::controller Controller1          = vex::controller();
 
 
+float target;
+float actual;
+
+float proportion;
+float integral;
+float derivative;
+
+float error;
+float lastError; 
+
+float Kp;
+float Ki;
+float Kd;
+
+void setup(){
+  TrayMotor.resetRotation();
+  
+}
+
+void pid(int target){
+  error = target - actual;
+
+  proportion = error;
+  integral = integral + error;
+  derivative = lastError - error;
+
+  
+
+}
+
 int main() {
   vexcodeInit();
-  
+  setup();
+
   while(1) {
 
     // Drive Control
@@ -41,25 +72,36 @@ int main() {
     RightBack.spin(vex::directionType::fwd, (Controller1.Axis1.value() - Controller1.Axis3.value())/2, vex::velocityUnits::pct);
 
     if(Controller1.ButtonA.pressing()){
-      TrayMotor.startRotateTo(-20, vex::rotationUnits::rev, 30, vex::velocityUnits::pct);
+      TrayMotor.spin(vex::directionType::rev, 20, vex::velocityUnits::pct);
     } else if(Controller1.ButtonB.pressing()){
-      TrayMotor.startRotateTo(20, vex::rotationUnits::rev, 30, vex::velocityUnits::pct);
-    } else {
+      if(TrayMotor.rotation(vex::rotationUnits::deg) < -10){ //Adds a stop to keep the tray from rotating backwards too far
+        TrayMotor.spin(vex::directionType::fwd, 60, vex::velocityUnits::pct);
+      } else {
+        TrayMotor.stop(vex::brakeType::hold);
+      }
+
+    } else if(Controller1.ButtonL2.pressing() && TrayMotor.rotation(vex::rotationUnits::deg) > -360){
+      //Doesn't stop if this pressed - allows the tray motor to move when arm motor goes up until it reaches -366deg
+    } 
+    else {
       TrayMotor.stop(vex::brakeType::hold);
     }
 
     if(Controller1.ButtonL1.pressing()){
-      ArmMotor.startRotateTo(25, vex::rotationUnits::rev, 100, vex::velocityUnits::pct);
+      ArmMotor.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
     } else if(Controller1.ButtonL2.pressing()){
-      ArmMotor.startRotateTo(-25, vex::rotationUnits::rev, 100, vex::velocityUnits::pct);
+      ArmMotor.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
+      if(TrayMotor.rotation(vex::rotationUnits::deg) > -360){
+        TrayMotor.spin(vex::directionType::rev, 40, vex::velocityUnits::pct);
+      }
     } else {
       ArmMotor.stop(vex::brakeType::hold);
     }
 
-    if(Controller1.ButtonR1.pressing()){
+    if(Controller1.ButtonR1.pressing()){ //intake
       LeftIntake.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
       RightIntake.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
-    } else if(Controller1.ButtonR2.pressing()){
+    } else if(Controller1.ButtonR2.pressing()){ //outtake
       LeftIntake.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
       RightIntake.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
     } else {
