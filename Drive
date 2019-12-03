@@ -2,21 +2,18 @@
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
 /*    Author:       John Schmidt                                              */
-/*    Created:      Tue Nov 12 2019                                           */
-/*    Description:  V5 project                                                */
+/*    Created:      Tue Dec 03 2019                                           */
+/*    Description:  V5 project-PID                                            */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-// Arcade Control
-// This program uses remote control values to move the robot.
 //
-// Robot Configuration:
+// PID Base Control
 //
-//
+
 #include "vex.h"
 
 using namespace vex;
 
-// define your global instances of motors and other devices here
 vex::motor LeftFront         = vex::motor( vex::PORT11 );
 vex::motor LeftBack          = vex::motor( vex::PORT20 );
 vex::motor RightFront         = vex::motor( vex::PORT1 );
@@ -28,89 +25,167 @@ vex::motor RightIntake        = vex::motor( vex::PORT9 );
 
 vex::controller Controller1          = vex::controller();
 
+int DriverTray;
+int DriverArm;
+int DriverIntake;
+int DriverDuration = 20;
 
-float target;
-float actual;
+int LeftError = 0;
+int RightError = 0;
+int ArmError = 0;
+int TrayError = 0;
+int IntakeError = 0;
 
-float proportion;
-float integral;
-float derivative;
+int LeftIntegral = 0;
+int RightIntegral = 0;
+int ArmIntegral = 0;
+int TrayIntegral = 0;
+int IntakeIntegral = 0;
 
-float error;
-float lastError; 
+int LeftDeriv = 0;
+int RightDeriv = 0;
+int ArmDeriv = 0;
+int TrayDeriv = 0;
+int IntakeDeriv = 0;
 
-float Kp;
-float Ki;
-float Kd;
+int LeftLast;
+int RightLast;
+int ArmLast;
+int TrayLast;
+int IntakeLast;
 
-void setup(){
-  TrayMotor.resetRotation();
+int LeftLastTarget;
+int RightLastTarget;
+int ArmLastTarget;
+int TrayLastTarget;
+int IntakeLastTarget;
+
+//void PID(int Target, int Error, int LastError, )
+
+void driveCode(int LeftTarget, int RightTarget, int ArmTarget, int TrayTarget, int IntakeTarget, int duration){
   
-}
+  //PID Calculations for the drive motors
 
-void pid(int target){
-  error = target - actual;
+  //Proportional Calculations:
+  LeftError = LeftTarget - ((LeftFront.velocity(vex::velocityUnits::pct) + LeftBack.velocity(vex::velocityUnits::pct))/2);
+  RightError = RightTarget - ((RightFront.velocity(vex::velocityUnits::pct) + RightBack.velocity(vex::velocityUnits::pct))/2);
 
-  proportion = error;
-  integral = integral + error;
-  derivative = lastError - error;
+  //Integral Calculations:
+  if(LeftLastTarget == LeftTarget){
+    LeftIntegral = LeftIntegral + LeftError;
+  } else {
+    LeftIntegral = 0; //Decays the integral value if the target values are different
+  }
+  if(RightLastTarget == RightTarget){
+    RightIntegral = RightIntegral + RightError;
+  } else {
+    RightIntegral = 0; //Decays the integral value if the target values are different
+  }
 
-  
+  //Derivative Calculations:
+  LeftDeriv = LeftError - LeftLast;
+  RightDeriv = RightError - RightLast;
 
+  LeftFront.spin(vex::directionType::fwd, ((LeftTarget*( 0.6 )) + (LeftError * ( 0.8 )) + (LeftIntegral*( 0.1 )) + (LeftDeriv * ( 0.3 ))), vex::velocityUnits::pct);
+  LeftBack.spin(vex::directionType::fwd, ((LeftTarget*( 0.6 )) + (LeftError * ( 0.8 )) + (LeftIntegral*( 0.1 )) + (LeftDeriv * ( 0.3 ))), vex::velocityUnits::pct);
+  RightFront.spin(vex::directionType::fwd, ((RightTarget*( 0.6 )) + (RightError * ( 0.8 )) + (RightIntegral*( 0.1 )) + (RightDeriv * ( 0.3 ))), vex::velocityUnits::pct);
+  RightBack.spin(vex::directionType::fwd, ((RightTarget*( 0.6 )) + (RightError * ( 0.8 )) + (RightIntegral*( 0.1 )) + (RightDeriv * ( 0.3 ))), vex::velocityUnits::pct);
+
+
+  //PID Calculations for the Auxiliary functions- tray, arm, and intake
+
+  //Proportional Calculations:
+  ArmError = ArmTarget - (ArmMotor.velocity(vex::velocityUnits::pct));
+  TrayError = TrayTarget - (TrayMotor.velocity(vex::velocityUnits::pct));
+  IntakeError = IntakeTarget - ((LeftIntake.velocity(vex::velocityUnits::pct) + RightIntake.velocity(vex::velocityUnits::pct))/2);
+
+  //Integral Calculations:
+  if(ArmLastTarget == ArmTarget){
+    ArmIntegral = ArmIntegral + ArmError;
+  } else {
+    ArmIntegral = 0; //Decays the integral value if the target values are different
+  }
+
+  if(TrayLastTarget == TrayTarget){
+    TrayIntegral = TrayIntegral + TrayError;
+  } else {
+    TrayIntegral = 0; //Decays the integral value if the target values are different
+  }
+
+  if(IntakeLastTarget == IntakeTarget){
+    IntakeIntegral = IntakeIntegral + IntakeError;
+  } else {
+    IntakeIntegral = 0; //Decays the integral value if the target values are different
+  }
+
+  //Derivative Calculations
+  ArmDeriv = ArmError - ArmLast;
+  TrayDeriv = TrayError - TrayLast;
+  IntakeDeriv = IntakeError - IntakeLast;
+
+  ArmMotor.spin(vex::directionType::fwd, ((ArmTarget*( 0.5 )) + (ArmError*( 0.8 )) + (ArmIntegral*( 0.1 )) + (ArmDeriv*( 0.3 ))), vex::velocityUnits::pct);
+  TrayMotor.spin(vex::directionType::fwd, ((TrayTarget*( 0.5 )) + (TrayError*( 0.8 )) + (TrayIntegral*( 0.1 )) + (TrayDeriv*( 0.3 ))), vex::velocityUnits::pct);
+  LeftIntake.spin(vex::directionType::fwd, ((IntakeTarget*( 0.5 )) + (IntakeError*( 0.8 )) + (IntakeIntegral*( 0.1 )) + (IntakeDeriv*( 0.3 ))), vex::velocityUnits::pct);
+  RightIntake.spin(vex::directionType::fwd, ((IntakeTarget*( 0.5 )) + (IntakeError*( 0.8 )) + (IntakeIntegral*( 0.1 )) + (IntakeDeriv*( 0.3 ))), vex::velocityUnits::pct);
+
+
+  //Saves the previous values of targets and errors
+  RightLast = RightError;
+  LeftLast = LeftError;
+  ArmLast = ArmError;
+  TrayLast = TrayError;
+  IntakeLast = IntakeError;
+
+  RightLastTarget = RightTarget;
+  LeftLastTarget = LeftTarget;
+  ArmLastTarget = ArmTarget;
+  TrayLastTarget = TrayTarget;
+  IntakeLastTarget = IntakeTarget;
+
+  vex::task::sleep(duration);
 }
 
 int main() {
+  // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
-  setup();
 
-  while(1) {
-
-    // Drive Control
-    LeftFront.spin(vex::directionType::fwd, (Controller1.Axis1.value() + Controller1.Axis3.value())/2, vex::velocityUnits::pct);
-    LeftBack.spin(vex::directionType::fwd, (Controller1.Axis1.value() + Controller1.Axis3.value())/2, vex::velocityUnits::pct);
-    RightFront.spin(vex::directionType::fwd, (Controller1.Axis1.value() - Controller1.Axis3.value())/2, vex::velocityUnits::pct);
-    RightBack.spin(vex::directionType::fwd, (Controller1.Axis1.value() - Controller1.Axis3.value())/2, vex::velocityUnits::pct);
-
+  while(1){
     if(Controller1.ButtonA.pressing()){
-      TrayMotor.spin(vex::directionType::rev, 20, vex::velocityUnits::pct);
+      DriverTray = -20;
     } else if(Controller1.ButtonB.pressing()){
       if(TrayMotor.rotation(vex::rotationUnits::deg) < -10){ //Adds a stop to keep the tray from rotating backwards too far
-        TrayMotor.spin(vex::directionType::fwd, 60, vex::velocityUnits::pct);
+        DriverTray = 60;
       } else {
-        TrayMotor.stop(vex::brakeType::hold);
+        DriverTray = 0;
       }
-
-    } else if(Controller1.ButtonL2.pressing() && TrayMotor.rotation(vex::rotationUnits::deg) > -360){
-      //Doesn't stop if this pressed - allows the tray motor to move when arm motor goes up until it reaches -366deg
-    } 
-    else {
-      TrayMotor.stop(vex::brakeType::hold);
     }
 
     if(Controller1.ButtonL1.pressing()){
-      ArmMotor.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
+      DriverArm = 100;
     } else if(Controller1.ButtonL2.pressing()){
-      ArmMotor.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
+      DriverArm = -100;
       if(TrayMotor.rotation(vex::rotationUnits::deg) > -360){
-        TrayMotor.spin(vex::directionType::rev, 40, vex::velocityUnits::pct);
+        DriverTray = -40;
       }
     } else {
-      ArmMotor.stop(vex::brakeType::hold);
+      DriverArm = 0;
     }
 
     if(Controller1.ButtonR1.pressing()){ //intake
-      LeftIntake.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
-      RightIntake.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
+      DriverIntake = 100;
     } else if(Controller1.ButtonR2.pressing()){ //outtake
-      LeftIntake.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
-      RightIntake.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
+      DriverIntake = -100;
     } else {
-      LeftIntake.stop(vex::brakeType::hold);
-      RightIntake.stop(vex::brakeType::hold);
+      DriverIntake = 0;
     }
 
-    // Sleep the task for a short amount of time to prevent wasted resources.
-    vex::task::sleep(20);
-
+    driveCode(((Controller1.Axis1.value()+ Controller1.Axis3.value())/2),
+      ((Controller1.Axis1.value() - Controller1.Axis3.value())/2),
+      DriverArm,
+      DriverTray,
+      DriverIntake,
+      DriverDuration);
+    
+      
   }
 }
