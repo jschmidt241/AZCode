@@ -60,7 +60,44 @@ int ArmLastTarget;
 int TrayLastTarget;
 int IntakeLastTarget;
 
-//void PID(int Target, int Error, int LastError, )
+
+class PID 
+{
+
+  public:
+  int Target;
+  int Actual;
+  int LastError;
+  int LastTarget;
+  int Error;
+  int Integral;
+  int Derivative;
+
+  PID(int a, int b, int c, int d) {
+    Target = a;
+    Actual = b;
+    LastError = c;
+    LastTarget = d;
+  }
+
+  void update(){
+    Error = Target - Actual; //Proportional Calculations
+
+    if(abs(Target - LastTarget) < 5 ){
+      Integral = Integral + Error; //Integral Calculations
+    } else {
+      Integral = 0; //Decays the integral value if the target values are different
+    }
+
+    Derivative = Error - LastError; //Derivative Calculations
+  }
+
+  void setTarget(int a){
+    Target = a;
+  }
+
+};
+
 
 void driveCode(int LeftTarget, int RightTarget, int ArmTarget, int TrayTarget, int IntakeTarget, int duration){
   
@@ -71,12 +108,12 @@ void driveCode(int LeftTarget, int RightTarget, int ArmTarget, int TrayTarget, i
   RightError = RightTarget - ((RightFront.velocity(vex::velocityUnits::pct) + RightBack.velocity(vex::velocityUnits::pct))/2);
 
   //Integral Calculations:
-  if(LeftLastTarget == LeftTarget){
+  if(abs(LeftTarget - LeftLastTarget) < 5 ){
     LeftIntegral = LeftIntegral + LeftError;
   } else {
     LeftIntegral = 0; //Decays the integral value if the target values are different
   }
-  if(RightLastTarget == RightTarget){
+  if(abs(RightTarget - RightLastTarget) < 5 ){
     RightIntegral = RightIntegral + RightError;
   } else {
     RightIntegral = 0; //Decays the integral value if the target values are different
@@ -86,10 +123,10 @@ void driveCode(int LeftTarget, int RightTarget, int ArmTarget, int TrayTarget, i
   LeftDeriv = LeftError - LeftLast;
   RightDeriv = RightError - RightLast;
 
-  LeftFront.spin(vex::directionType::fwd, ((LeftTarget*( 0.6 )) + (LeftError * ( 0.8 )) + (LeftIntegral*( 0.1 )) + (LeftDeriv * ( 0.3 ))), vex::velocityUnits::pct);
-  LeftBack.spin(vex::directionType::fwd, ((LeftTarget*( 0.6 )) + (LeftError * ( 0.8 )) + (LeftIntegral*( 0.1 )) + (LeftDeriv * ( 0.3 ))), vex::velocityUnits::pct);
-  RightFront.spin(vex::directionType::fwd, ((RightTarget*( 0.6 )) + (RightError * ( 0.8 )) + (RightIntegral*( 0.1 )) + (RightDeriv * ( 0.3 ))), vex::velocityUnits::pct);
-  RightBack.spin(vex::directionType::fwd, ((RightTarget*( 0.6 )) + (RightError * ( 0.8 )) + (RightIntegral*( 0.1 )) + (RightDeriv * ( 0.3 ))), vex::velocityUnits::pct);
+  LeftFront.spin(vex::directionType::fwd, ((LeftTarget*( 0.6 )) + (LeftError * ( 0.2 )) + (LeftIntegral*( 0.8 )) + (LeftDeriv * ( 0.3 ))), vex::velocityUnits::pct);
+  LeftBack.spin(vex::directionType::fwd, ((LeftTarget*( 0.6 )) + (LeftError * ( 0.2 )) + (LeftIntegral*( 0.8 )) + (LeftDeriv * ( 0.3 ))), vex::velocityUnits::pct);
+  RightFront.spin(vex::directionType::fwd, ((RightTarget*( 0.6 )) + (RightError * ( 0.2 )) + (RightIntegral*( 0.8 )) + (RightDeriv * ( 0.3 ))), vex::velocityUnits::pct);
+  RightBack.spin(vex::directionType::fwd, ((RightTarget*( 0.6 )) + (RightError * ( 0.2 )) + (RightIntegral*( 0.8 )) + (RightDeriv * ( 0.3 ))), vex::velocityUnits::pct);
 
 
   //PID Calculations for the Auxiliary functions- tray, arm, and intake
