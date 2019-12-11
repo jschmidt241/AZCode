@@ -93,6 +93,19 @@ PID Arm(0, 0, 0, 0);
 PID Tray(0, 0, 0, 0);
 PID Intake(0, 0, 0, 0);
 
+void setup(){
+
+  LeftBack.setStopping(vex::brakeType::coast);
+  LeftFront.setStopping(vex::brakeType::coast);
+  RightFront.setStopping(vex::brakeType::coast);
+  RightBack.setStopping(vex::brakeType::coast);
+
+  ArmMotor.setStopping(vex::brakeType::hold);
+  TrayMotor.setStopping(vex::brakeType::hold);
+  RightIntake.setStopping(vex::brakeType::hold);
+  LeftIntake.setStopping(vex::brakeType::hold);
+
+}
 
 void driveCode(int duration){
   LeftSide.setActual((LeftFront.velocity(vex::velocityUnits::pct) + LeftBack.velocity(vex::velocityUnits::pct))/2);
@@ -126,22 +139,16 @@ int main() {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
 
-  LeftBack.setStopping(vex::brakeType::coast);
-  LeftFront.setStopping(vex::brakeType::coast);
-  RightFront.setStopping(vex::brakeType::coast);
-  RightBack.setStopping(vex::brakeType::coast);
-
-  ArmMotor.setStopping(vex::brakeType::hold);
-  TrayMotor.setStopping(vex::brakeType::hold);
-  RightIntake.setStopping(vex::brakeType::hold);
-  LeftIntake.setStopping(vex::brakeType::hold);
-
+  setup();
 
   while(1){
+    Brain.Screen.clearLine();
+    Brain.Screen.print(TrayMotor.rotation(vex::rotationUnits::deg));
+
     if(Controller1.ButtonA.pressing()){
       Tray.setTarget(-50);
     } else if(Controller1.ButtonB.pressing()){
-      if(TrayMotor.rotation(vex::rotationUnits::deg) < -10){ //Adds a stop to keep the tray from rotating backwards too far
+      if(TrayMotor.rotation(vex::rotationUnits::deg) < -120){ //Adds a stop to keep the tray from rotating backwards too far
         Tray.setTarget(90);
       } else {
         Tray.setTarget(0);
