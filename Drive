@@ -2,18 +2,19 @@
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
 /*    Author:       John Schmidt                                              */
-/*    Created:      Tue Dec 03 2019                                           */
-/*    Description:  V5 project-PID                                            */
+/*    Created:      Thu Dec 17 2019                                           */
+/*    Description:  Competition Code                                          */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-//
-// PID Base Control
-//
 
 #include "vex.h"
 
 using namespace vex;
 
+// A global instance of competition
+competition Competition;
+
+// define your global instances of motors and other devices here
 vex::motor LeftFront         = vex::motor( vex::PORT3 ); //
 vex::motor LeftBack          = vex::motor( vex::PORT7 ); //
 vex::motor RightFront         = vex::motor( vex::PORT1 ); //
@@ -21,7 +22,7 @@ vex::motor RightBack         = vex::motor( vex::PORT10 ); //
 vex::motor ArmMotor           = vex::motor( vex::PORT5 ); //
 vex::motor TrayMotor         = vex::motor( vex::PORT19 ); //
 vex::motor LeftIntake         = vex::motor( vex::PORT2 ); //
-vex::motor RightIntake       = vex::motor( vex::PORT20 ); //
+vex::motor RightIntake       = vex::motor( vex::PORT18 ); //
 
 vex::controller Controller1          = vex::controller();
 
@@ -93,7 +94,14 @@ PID Arm(0, 0, 0, 0);
 PID Tray(0, 0, 0, 0);
 PID Intake(0, 0, 0, 0);
 
-void setup(){
+/*---------------------------------------------------------------------------*/
+/*                          Pre-Autonomous Functions                         */
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+
+void pre_auton(void) {
+  // Initializing Robot Configuration. DO NOT REMOVE!
+  vexcodeInit();
 
   LeftBack.setStopping(vex::brakeType::coast);
   LeftFront.setStopping(vex::brakeType::coast);
@@ -105,7 +113,13 @@ void setup(){
   RightIntake.setStopping(vex::brakeType::hold);
   LeftIntake.setStopping(vex::brakeType::hold);
 
+  TrayMotor.resetRotation();
 }
+
+/*---------------------------------------------------------------------------*/
+/*                              Autonomous Task                              */
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
 
 void setTargets(int Left, int Right, int Arm1, int Tray1, int Intake1){
   LeftSide.setTarget(Left);
@@ -113,6 +127,10 @@ void setTargets(int Left, int Right, int Arm1, int Tray1, int Intake1){
   Arm.setTarget(Arm1);
   Tray.setTarget(Tray1);
   Intake.setTarget(Intake1);
+}
+
+void autonomous(void) {
+  
 }
 
 void driveCode(int duration){
@@ -140,25 +158,17 @@ void driveCode(int duration){
   LeftIntake.spin(vex::directionType::fwd, ((Intake.Target*( 1 )) + (Intake.Error*( IntakeKp )) + (Intake.Integral*( IntakeKi )) + (Intake.Derivative*( IntakeKd ))), vex::velocityUnits::pct);
   RightIntake.spin(vex::directionType::rev, ((Intake.Target*( 1 )) + (Intake.Error*( IntakeKp )) + (Intake.Integral*( IntakeKi )) + (Intake.Derivative*( IntakeKd ))), vex::velocityUnits::pct);
 
-  vex::task::sleep(duration);
+  wait(duration, msec);
 }
 
-void auton(){
-  setTargets(80, -80, 0, 0, 0);
-  driveCode(1000);
+/*---------------------------------------------------------------------------*/
+/*                              User Control Task                            */
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
 
+void usercontrol(void) {
   
-}
-
-int main() {
-  // Initializing Robot Configuration. DO NOT REMOVE!
-  vexcodeInit();
-
-  setup();
-
-  auton();
-
-  while(1){
+  while (1) {
     Brain.Screen.clearLine();
     Brain.Screen.print(TrayMotor.rotation(vex::rotationUnits::deg));
 
@@ -195,6 +205,20 @@ int main() {
     LeftSide.setTarget((Controller1.Axis1.value() + Controller1.Axis3.value())/2);
 
     driveCode(DriverDuration);
-    
+
+  }
+}
+
+int main() {
+  // Callbacks for autonomous and driver control periods.
+  Competition.autonomous(autonomous);
+  Competition.drivercontrol(usercontrol);
+
+  // Run the pre-autonomous function.
+  pre_auton();
+
+  // Prevent main from exiting with an infinite loop.
+  while (true) {
+    wait(100, msec);
   }
 }
