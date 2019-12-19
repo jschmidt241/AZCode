@@ -2,13 +2,8 @@
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
 /*    Author:       John Schmidt                                              */
-<<<<<<< HEAD
 /*    Created:      Thu Dec 17 2019                                           */
 /*    Description:  Competition Code                                          */
-=======
-/*    Created:      Tue Nov 12 2019                                           */
-/*    Description:  V5 project                                                */
->>>>>>> dacd31874f6a2856d4b80e30a129b99b5e84046e
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
@@ -31,87 +26,6 @@ vex::motor RightIntake       = vex::motor( vex::PORT18 ); //
 
 vex::controller Controller1          = vex::controller();
 
-int correct;
-int selected;
-
-int x;
-int y;
-
-bool troubleshooting = false;
-
-void gui() {  
-  Brain.Screen.clearScreen();
-  Brain.Screen.clearLine();
-
-  selected = -1;
-  Brain.Screen.drawRectangle(0, 0, 240, 120, vex::color::blue);
-  Brain.Screen.drawRectangle(240,0,240,120,vex::color::red);
-  Brain.Screen.drawRectangle(0, 125, 240, 120, vex::color::blue);
-  Brain.Screen.drawRectangle(240, 125, 240, 120, vex::color::red);
-  
-  x = -20;
-  y = -20;
-  while(!Brain.Screen.pressing()){
-    vex::task::sleep(20);
-  }
-  while(selected < 0){
-    x = Brain.Screen.xPosition();
-    y = Brain.Screen.yPosition();
-
-    if(x < 240 && y < 125 && x > 0 && y > 0){
-      selected = 1;
-    } else if(x < 240 && y > 125 && x > 0 && y > 0){
-      selected = 2;
-    } else if(x > 240 && y < 125 && x > 0 && y > 0){
-      selected = 3;
-    } else if(x >240 && y > 125 && x > 0 && y > 0){
-      selected = 4;
-    }
-  }
-  vex::task::sleep(600);
-  Brain.Screen.clearScreen();
-  Brain.Screen.clearLine();
-  Brain.Screen.printAt(0,20,true, "Program selected: %d", selected);
-  Brain.Screen.printAt(0,50,true, "Correct?");
-  Brain.Screen.drawRectangle(0,75, 240, 240, vex::color::green);
-  Brain.Screen.drawRectangle(240,75, 240, 240, vex::color::red);
-
-  while(!Brain.Screen.pressing()){
-    vex::task::sleep(20);
-  }
-  x = Brain.Screen.xPosition();
-  y = Brain.Screen.yPosition();
-  vex::task::sleep(300);
-  while(correct < 0){
-    x = Brain.Screen.xPosition();
-    y = Brain.Screen.yPosition();
-
-    if(x < 240 && y < 240 && x > 0 && y > 75){
-      correct = 1;
-    } else if(x > 240 && y < 240 && y > 75){
-      correct = 0;
-    } 
-  }
-}
-
-void setup(){
-  TrayMotor.resetRotation();
-
-}
-
-void drive(){
-  RightBack.startRotateTo(1,vex::rotationUnits::rev);
-  LeftBack.startRotateTo(1,vex::rotationUnits::rev);
-  RightFront.startRotateTo(1,vex::rotationUnits::rev);
-  LeftFront.startRotateTo(1,vex::rotationUnits::rev);
-}
-
-void stop(){
-  RightBack.stop();
-  LeftBack.stop();
-  RightFront.stop();
-  LeftFront.stop();
-}
 
 int DriverDuration = 20;
 float DriveKp = 0.2;
@@ -249,7 +163,6 @@ void gui() {
 void pre_auton(void) {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
-<<<<<<< HEAD
 
   LeftBack.setStopping(vex::brakeType::coast);
   LeftFront.setStopping(vex::brakeType::coast);
@@ -269,21 +182,10 @@ void pre_auton(void) {
     gui(); 
   } 
   
-=======
-  setup();
-  
-  while(correct < 1){
-    correct = 1; //change
-    selected = -1;
-    //gui(); 
-  } 
-  
->>>>>>> dacd31874f6a2856d4b80e30a129b99b5e84046e
   Brain.Screen.clearScreen();
   Brain.Screen.clearLine();
   Brain.Screen.printAt(5,20,true, "Program selected: %d", selected);
 
-<<<<<<< HEAD
 }
 
 /*---------------------------------------------------------------------------*/
@@ -318,16 +220,6 @@ void driveCode(int duration){
   Arm.update();
   Tray.update();
   Intake.update();
-=======
-  LeftIntake.setVelocity(100, vex::velocityUnits::pct);
-  RightIntake.setVelocity(100, vex::velocityUnits::pct);
-  LeftBack.setVelocity(50, vex::velocityUnits::pct);
-  RightBack.setVelocity(50, vex::velocityUnits::pct);
-  LeftFront.setVelocity(50, vex::velocityUnits::pct);
-  RightFront.setVelocity(50, vex::velocityUnits::pct);
-
-  while(1) {
->>>>>>> dacd31874f6a2856d4b80e30a129b99b5e84046e
 
   ArmMotor.spin(vex::directionType::fwd, ((Arm.Target*( 1 )) + (Arm.Error*( ArmKp )) + (Arm.Integral*( ArmKi )) + (Arm.Derivative*( ArmKd ))), vex::velocityUnits::pct);
   TrayMotor.spin(vex::directionType::fwd, ((Tray.Target*( 1 )) + (Tray.Error*( TrayKp )) + (Tray.Integral*( TrayKi )) + (Tray.Derivative*( TrayKd ))), vex::velocityUnits::pct);
@@ -362,7 +254,6 @@ void usercontrol(void) {
     Brain.Screen.print(TrayMotor.rotation(vex::rotationUnits::deg));
 
     if(Controller1.ButtonA.pressing()){
-<<<<<<< HEAD
       Tray.setTarget(-50);
     } else if(Controller1.ButtonB.pressing()){
       if(TrayMotor.rotation(vex::rotationUnits::deg) < -120){ //Adds a stop to keep the tray from rotating backwards too far
@@ -372,19 +263,8 @@ void usercontrol(void) {
       }
     } else {
       Tray.setTarget(0);
-=======
-      TrayMotor.spin(vex::directionType::rev, 10, vex::velocityUnits::pct);
-    } else if(Controller1.ButtonB.pressing()){
-      TrayMotor.spin(vex::directionType::fwd, 60, vex::velocityUnits::pct);
-    } else if(Controller1.ButtonL2.pressing() && TrayMotor.rotation(vex::rotationUnits::deg) > -360){
-      //Doesn't stop if this pressed - allows the tray motor to move when arm motor goes up until it reaches -366deg
-    } 
-    else {
-      TrayMotor.stop(vex::brakeType::hold);
->>>>>>> dacd31874f6a2856d4b80e30a129b99b5e84046e
     }
     if(Controller1.ButtonL1.pressing()){
-<<<<<<< HEAD
       Arm.setTarget(100);
     } else if(Controller1.ButtonL2.pressing()){
       Arm.setTarget(-100);
@@ -398,25 +278,6 @@ void usercontrol(void) {
       Intake.setTarget(100);
     } else if(Controller1.ButtonR2.pressing()){ //outtake
       Intake.setTarget(-100);
-=======
-      ArmMotor.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
-    } else if(Controller1.ButtonL2.pressing()){
-      ArmMotor.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
-      if(TrayMotor.rotation(vex::rotationUnits::deg) > -360){
-        TrayMotor.spin(vex::directionType::rev, 40, vex::velocityUnits::pct);
-      }
-    } else {
-      ArmMotor.stop(vex::brakeType::hold);
-
-    }
-
-    if(Controller1.ButtonR1.pressing()){ //intake
-      LeftIntake.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
-      RightIntake.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
-    } else if(Controller1.ButtonR2.pressing()){ //outtake
-      LeftIntake.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
-      RightIntake.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
->>>>>>> dacd31874f6a2856d4b80e30a129b99b5e84046e
     } else {
       Intake.setTarget(0);
     }
