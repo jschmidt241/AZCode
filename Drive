@@ -21,25 +21,25 @@ vex::motor RightBack         = vex::motor( vex::PORT10 ); //
 vex::motor ArmMotor           = vex::motor( vex::PORT5 ); //
 vex::motor TrayMotor         = vex::motor( vex::PORT19 ); //
 vex::motor LeftIntake         = vex::motor( vex::PORT2 ); //
-vex::motor RightIntake       = vex::motor( vex::PORT20 ); //
+vex::motor RightIntake       = vex::motor( vex::PORT18 ); //
 
 vex::controller Controller1          = vex::controller();
 
 
 int DriverDuration = 20;
-float DriveKp = 0.2;
-float DriveKi = 0.01;
-float DriveKd = 0.1;
+float DriveKp = 0.04;
+float DriveKi = 0;
+float DriveKd = 0;
 
-float ArmKp = 0.2;
+float ArmKp = 0;
 float ArmKi = 0;
 float ArmKd = 0;
 
-float IntakeKp = 0.2;
+float IntakeKp = 0.04;
 float IntakeKi = 0;
 float IntakeKd = 0;
 
-float TrayKp = 0.2;
+float TrayKp = 0;
 float TrayKi = 0;
 float TrayKd = 0;
 
@@ -65,7 +65,7 @@ class PID
 
     Error = Target - Actual; //Proportional Calculations
 
-    if(abs(Target - LastTarget) < 5 ){
+    if(abs(Target - LastTarget) < 1 ){
       Integral = Integral + Error; //Integral Calculations
     } else {
       Integral = 0; //Decays the integral value if the target values are different
@@ -84,14 +84,14 @@ class PID
   void setActual(int a){
     Actual = a;
   }
-
 };
 
 PID LeftSide(0, 0, 0, 0);
 PID RightSide(0, 0, 0, 0);
 PID Arm(0, 0, 0, 0);
 PID Tray(0, 0, 0, 0);
-PID Intake(0, 0, 0, 0);
+PID LIntake(0, 0, 0, 0);
+PID RIntake(0, 0, 0, 0);
 
 void setup(){
 
@@ -107,47 +107,100 @@ void setup(){
 
 }
 
-void setTargets(int Left, int Right, int Arm1, int Tray1, int Intake1){
+void setTargets(int Left, int Right, int Arm1, int Tray1, int LeIntake, int RiIntake){
   LeftSide.setTarget(Left);
-  RightSide.setTarget(Right);
+  RightSide.setTarget(Right * -1);
   Arm.setTarget(Arm1);
   Tray.setTarget(Tray1);
-  Intake.setTarget(Intake1);
+  LIntake.setTarget(LeIntake);
+  RIntake.setTarget(RiIntake);
 }
 
 void driveCode(int duration){
-  LeftSide.setActual((LeftFront.velocity(vex::velocityUnits::pct) + LeftBack.velocity(vex::velocityUnits::pct))/2);
-  RightSide.setActual((RightFront.velocity(vex::velocityUnits::pct) + RightBack.velocity(vex::velocityUnits::pct))/2);
+  LeftSide.setActual(((LeftFront.velocity(vex::velocityUnits::pct) + LeftBack.velocity(vex::velocityUnits::pct))/2) * 0.4 );
+  RightSide.setActual(((RightFront.velocity(vex::velocityUnits::pct) + RightBack.velocity(vex::velocityUnits::pct))/2) * 0.4 );
+
 
   LeftSide.update();
   RightSide.update();
 
-  LeftFront.spin(vex::directionType::fwd, ((LeftSide.Target*( 1 )) + (LeftSide.Error * ( DriveKp )) + (LeftSide.Integral*( DriveKi )) + (LeftSide.Derivative * ( DriveKd ))), vex::velocityUnits::pct);
-  LeftBack.spin(vex::directionType::fwd, ((LeftSide.Target*( 1 )) + (LeftSide.Error * ( DriveKp )) + (LeftSide.Integral*( DriveKi )) + (LeftSide.Derivative * ( DriveKd ))), vex::velocityUnits::pct);
-  RightFront.spin(vex::directionType::fwd, ((RightSide.Target*( 1 )) + (RightSide.Error * ( DriveKp )) + (RightSide.Integral*( DriveKi )) + (RightSide.Derivative * ( DriveKd ))), vex::velocityUnits::pct);
-  RightBack.spin(vex::directionType::fwd, ((RightSide.Target*( 1 )) + (RightSide.Error * ( DriveKp )) + (RightSide.Integral*( DriveKi )) + (RightSide.Derivative * ( DriveKd ))), vex::velocityUnits::pct);
+  LeftFront.spin(vex::directionType::fwd, ((LeftSide.Target*( 0.3 )) + (LeftSide.Error * ( DriveKp )) + (LeftSide.Integral*( DriveKi )) + (LeftSide.Derivative * ( DriveKd ))), vex::voltageUnits::volt);
+  LeftBack.spin(vex::directionType::fwd, ((LeftSide.Target*( 0.3 )) + (LeftSide.Error * ( DriveKp )) + (LeftSide.Integral*( DriveKi )) + (LeftSide.Derivative * ( DriveKd ))), vex::voltageUnits::volt);
+  RightFront.spin(vex::directionType::fwd, ((RightSide.Target*( 0.3 )) + (RightSide.Error * ( DriveKp )) + (RightSide.Integral*( DriveKi )) + (RightSide.Derivative * ( DriveKd ))), vex::voltageUnits::volt);
+  RightBack.spin(vex::directionType::fwd, ((RightSide.Target*( 0.3 )) + (RightSide.Error * ( DriveKp )) + (RightSide.Integral*( DriveKi )) + (RightSide.Derivative * ( DriveKd ))), vex::voltageUnits::volt);
+
+  Brain.Screen.clearScreen();
+  Brain.Screen.clearLine();
+  Brain.Screen.printAt(10, 15, "Motor voltage: %d", LeftSide.Target);  
+  Brain.Screen.printAt(10, 30, "Motor actual: %d", LeftSide.Actual);
 
   Arm.setActual(ArmMotor.velocity(vex::velocityUnits::pct));
   Tray.setActual(TrayMotor.velocity(vex::velocityUnits::pct));
-  Intake.setActual((LeftIntake.velocity(vex::velocityUnits::pct) + RightIntake.velocity(vex::velocityUnits::pct))/2);
+  RIntake.setActual(RightIntake.velocity(vex::velocityUnits::pct));
+  LIntake.setActual(LeftIntake.velocity(vex::velocityUnits::pct));
 
   Arm.update();
   Tray.update();
-  Intake.update();
+  RIntake.update();
+  LIntake.update();
 
-  ArmMotor.spin(vex::directionType::fwd, ((Arm.Target*( 1 )) + (Arm.Error*( ArmKp )) + (Arm.Integral*( ArmKi )) + (Arm.Derivative*( ArmKd ))), vex::velocityUnits::pct);
-  TrayMotor.spin(vex::directionType::fwd, ((Tray.Target*( 1 )) + (Tray.Error*( TrayKp )) + (Tray.Integral*( TrayKi )) + (Tray.Derivative*( TrayKd ))), vex::velocityUnits::pct);
-  LeftIntake.spin(vex::directionType::fwd, ((Intake.Target*( 1 )) + (Intake.Error*( IntakeKp )) + (Intake.Integral*( IntakeKi )) + (Intake.Derivative*( IntakeKd ))), vex::velocityUnits::pct);
-  RightIntake.spin(vex::directionType::rev, ((Intake.Target*( 1 )) + (Intake.Error*( IntakeKp )) + (Intake.Integral*( IntakeKi )) + (Intake.Derivative*( IntakeKd ))), vex::velocityUnits::pct);
+  ArmMotor.spin(vex::directionType::fwd, ((Arm.Target*( 1 )) + (Arm.Error*( ArmKp )) + (Arm.Integral*( ArmKi )) + (Arm.Derivative*( ArmKd ))), vex::voltageUnits::volt);
+  TrayMotor.spin(vex::directionType::fwd, ((Tray.Target*( 1 )) + (Tray.Error*( TrayKp )) + (Tray.Integral*( TrayKi )) + (Tray.Derivative*( TrayKd ))), vex::voltageUnits::volt);
+  LeftIntake.spin(vex::directionType::fwd, ((LIntake.Target*( 1 )) + (LIntake.Error*( IntakeKp )) + (LIntake.Integral*( IntakeKi )) + (LIntake.Derivative*( IntakeKd ))), vex::voltageUnits::volt);
+  RightIntake.spin(vex::directionType::rev, ((RIntake.Target*( 1 )) + (RIntake.Error*( IntakeKp )) + (RIntake.Integral*( IntakeKi )) + (RIntake.Derivative*( IntakeKd ))), vex::voltageUnits::volt);
 
   vex::task::sleep(duration);
 }
 
 void auton(){
-  setTargets(80, -80, 0, 0, 0);
-  driveCode(1000);
+  //Expand
+    /**
+    TrayMotor.startRotateTo(5, vex::rotationUnits::rev);
+    wait(20, msec);
 
-  
+    setTargets(5, 5, 0, 0, -20, -20);
+    driveCode(100);
+    **/
+
+    
+    //Blue Left
+    setTargets(15, 15, 0, 0, 100, 100);
+    driveCode(2500);
+    
+    setTargets(-10, -10,0,0,50,50);
+    driveCode(400);
+    
+    setTargets(-28, -16, 0, 0, 0, 0);
+    driveCode(1450);
+    
+    setTargets(-10, -10, 0, 0, 0, 0);
+    driveCode(200);
+
+    setTargets(18, -18, 0, 0, 0, 0);
+    driveCode(570);
+
+    setTargets(17, 17, 0, 0, 100, 100);
+    driveCode(2000);
+
+    setTargets(-20, -20, 0, 0, 0, 0);
+    driveCode(1350);
+
+    setTargets(-20, 20, 0, 0, 0, 0);
+    driveCode(250);
+
+    setTargets(5, 25, 0, 0, 0, 0);
+    driveCode(1200);
+
+    /**
+    setTargets(0, 0, 0, 40, 0, 0);
+    driveCode(1200);
+
+    setTargets(0, 0, 0, -10, -5, -5);
+    driveCode(100);
+
+    setTargets(-20, -20, 0, -10, -5, -5);
+    driveCode(200);
+    **/
 }
 
 int main() {
@@ -159,9 +212,6 @@ int main() {
   auton();
 
   while(1){
-    Brain.Screen.clearLine();
-    Brain.Screen.print(TrayMotor.rotation(vex::rotationUnits::deg));
-
     if(Controller1.ButtonA.pressing()){
       Tray.setTarget(-50);
     } else if(Controller1.ButtonB.pressing()){
@@ -184,15 +234,26 @@ int main() {
       Arm.setTarget(0);
     }
     if(Controller1.ButtonR1.pressing()){ //intake
-      Intake.setTarget(100);
+      RIntake.setTarget(100);
+      LIntake.setTarget(100);
     } else if(Controller1.ButtonR2.pressing()){ //outtake
-      Intake.setTarget(-100);
+      RIntake.setTarget(-100);
+      LIntake.setTarget(-100);
     } else {
-      Intake.setTarget(0);
+      RIntake.setTarget(0);
+      LIntake.setTarget(0);
     }
     
-    RightSide.setTarget((Controller1.Axis1.value() - Controller1.Axis3.value())/2 );
+    RightSide.setTarget((Controller1.Axis1.value() - Controller1.Axis3.value())/2);
     LeftSide.setTarget((Controller1.Axis1.value() + Controller1.Axis3.value())/2);
+
+    if(Controller1.ButtonDown.pressing()){
+      RIntake.setTarget(-10);
+      LIntake.setTarget(-10);
+      RightSide.setTarget(15);
+      LeftSide.setTarget(-15);
+      Tray.setTarget(20);
+    }
 
     driveCode(DriverDuration);
     
