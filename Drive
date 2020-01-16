@@ -265,6 +265,11 @@ void stopMotors(){
   RightFront.stop();
   LeftBack.stop();
   RightBack.stop();
+
+  RightIntake.stop();
+  LeftIntake.stop();
+  ArmMotor.stop();
+  TrayMotor.stop();
 }
 
 void setAuton(float left, float right, int Arm1, int Tray1, int LeIntake, int RiIntake, int count){
@@ -294,6 +299,37 @@ void auton(){
   setAuton(25, 25, 0, -100, 0, 0, 1500);
   autonPID();
   stopMotors();
+  
+  RightSide.setTarget(10);
+  LeftSide.setTarget(-10);
+  driveCode(DriverDuration);
+  setAuton(0, 0, 50, -100, 0, 0, 1500);
+  autonPID();
+  vex::task::sleep(1500);
+  stopMotors();
+
+  RightSide.setTarget(5);
+  LeftSide.setTarget(-5);
+  driveCode(DriverDuration);
+  setAuton(0, 0, 0, 100, 0, 0, 1400);
+  autonPID();
+  vex::task::sleep(1400);
+  stopMotors();
+
+  setAuton(-10, -10, -60, 0, 100, 100, 1000);
+  autonPID();
+  stopMotors();
+
+  setAuton(-40, -70, 0, 100, 0, 0, 3000);
+  autonPID();
+  stopMotors();
+
+  vex::task::sleep(500);
+  **/
+  /**
+  setAuton(25, 25, 0, -100, 0, 0, 1500);
+  autonPID();
+  stopMotors();
 
   setAuton(-25, -25, 50, -100, 0, 0, 1500);
   autonPID();
@@ -306,14 +342,14 @@ void auton(){
   setAuton(-10, -10, -60, 0, 100, 100, 1000);
   autonPID();
   stopMotors();
-
+  **/
+   /**
   setAuton(-40, -70, 0, 100, 0, 0, 3000);
   autonPID();
   stopMotors();
   **/
 
-  vex::task::sleep(500);
-  
+  //blue back auton
   acc = 1.1;
   velCap = 2.2;
   setAuton(7, 7, 0, 0, 100, 100, 500);
@@ -322,7 +358,7 @@ void auton(){
   
   acc = 0.08;
   velCap = 1.8;
-  setAuton(30, 30, 0, 0, 100, 100, 2750);
+  setAuton(31, 31, 0, 0, 100, 100, 2750);
   autonPID();
   stopMotors();
 
@@ -340,44 +376,49 @@ void auton(){
   autonPID();
   stopMotors();
 
-  LeftSide.setTarget(-25);
-  RightSide.setTarget(-25);
+  LeftSide.setTarget(-15); //spin to goal zone
+  RightSide.setTarget(-15);
   driveCode(DriverDuration);
+  vex::task::sleep(1020);
   LeftSide.setTarget(0);
   RightSide.setTarget(0);
+  stopMotors();
   vex::task::sleep(500);
+
+  acc = 0.5;
+  velCap = 3.5;
+  setAuton(13, 13, 0, 0, 0, 0, 1400);
+  autonPID();
   stopMotors();
-  
+
+  setAuton(0, 0, 0, 0, -4, -4, 150);
+  autonPID();
+  stopMotors();
+
+  setAuton(0, 0, 0, -10, 0, 0, 1500);
+  autonPID();
+  stopMotors();
+
+  setAuton(0, 0, 0, -6, 0, 0, 1200);
+  autonPID();
+  stopMotors();
+
+  setAuton(4, 4, 0, 5, 0, 0, 800);
+  autonPID();
+  stopMotors();
+
+  vex::task::sleep(500);
+
   acc = 0.1;
-  velCap = 1;
-  setAuton(20, 20, 0, 0, 0, 0, 1400);
-  autonPID();
+  velCap = 2;
+  setAuton(-15, -15, 0, 10, -15, -15, 800);
   stopMotors();
 
-
-  /**
-  acc = 6;
-  setAuton(-50, -50, 0, 0, 0, 0, 3500);
-  autonPID();
-  stopMotors();
-
-  acc = 3;
-
-  setAuton(-20, 20, 0, 0, 0, 0, 1500);
-  autonPID();
-  stopMotors();
-
-  acc = 6;
-
-  setAuton(15, 15, 0, 0, 0, 0, 1300);
-  autonPID();
-  stopMotors();
-
-
-  setAuton(0, 0, 0, -20, 0, 0, 6000);
-  autonPID();
-  stopMotors();
-  **/
+  RightSide.setTarget(15);
+  LeftSide.setTarget(-15);
+  driveCode(DriverDuration);
+  vex::task::sleep(1000);
+  
 }
 
 int main() {
