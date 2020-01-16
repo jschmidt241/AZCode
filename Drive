@@ -1,3 +1,4 @@
+
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
@@ -156,12 +157,11 @@ void driveCode(int duration){
   RightBack.spin(vex::directionType::fwd, ((RightSide.Target*( 0.3 * turnK )) + (RightSide.Error * ( DriveKp )) + (RightSide.Integral*( DriveKi )) + (RightSide.Derivative * ( DriveKd ))), vex::voltageUnits::volt);
 
   turnK = 1; //Resets the turn constant to keep it from affecting later iterations
-  
 
   Brain.Screen.clearScreen();
   Brain.Screen.clearLine();
-  Brain.Screen.printAt(10, 15, "Motor voltage: %d", LeftSide.Target);  
-  Brain.Screen.printAt(10, 30, "Motor actual: %d", LeftSide.Actual);
+  Brain.Screen.printAt(10, 15, "Left temp: %f", LeftFront.temperature(vex::temperatureUnits::fahrenheit));  
+  Brain.Screen.printAt(10, 30, "Right temp: %f", RightFront.temperature(vex::temperatureUnits::fahrenheit));
 
   Arm.setActual(ArmMotor.velocity(vex::velocityUnits::pct));
   Tray.setActual(TrayMotor.velocity(vex::velocityUnits::pct));
@@ -204,6 +204,7 @@ void autonPID(){
   actualLeft = ((LeftFront.position(vex::rotationUnits::deg) + LeftBack.position(vex::rotationUnits::deg))/2);
   actualRight = ((RightFront.position(vex::rotationUnits::deg) + RightBack.position(vex::rotationUnits::deg))/2);
 
+  counter = 0;
 
   while(counter < endCounter){
     errorLeft = targetLeft - ((LeftFront.position(vex::rotationUnits::deg) + LeftBack.position(vex::rotationUnits::deg))/2);
@@ -313,14 +314,46 @@ void auton(){
 
   vex::task::sleep(500);
   
-  acc = 0.1;
-  velCap = 4.5;
-
-  setAuton(45, 45, 0, 0, 100, 100, 5000);
+  acc = 1.1;
+  velCap = 2.2;
+  setAuton(7, 7, 0, 0, 100, 100, 500);
   autonPID();
   stopMotors();
   
+  acc = 0.08;
+  velCap = 1.8;
+  setAuton(30, 30, 0, 0, 100, 100, 2750);
+  autonPID();
+  stopMotors();
+
   vex::task::sleep(500);
+
+  LeftSide.setTarget(-50);
+  RightSide.setTarget(50);
+  for(int i=0; i<76; i++){
+    driveCode(DriverDuration);
+  }
+
+  acc = 1.1;
+  velCap = 3;
+  setAuton(5, 5, 0, 0, 0, 0, 500);
+  autonPID();
+  stopMotors();
+
+  LeftSide.setTarget(-25);
+  RightSide.setTarget(-25);
+  driveCode(DriverDuration);
+  LeftSide.setTarget(0);
+  RightSide.setTarget(0);
+  vex::task::sleep(500);
+  stopMotors();
+  
+  acc = 0.1;
+  velCap = 1;
+  setAuton(20, 20, 0, 0, 0, 0, 1400);
+  autonPID();
+  stopMotors();
+
 
   /**
   acc = 6;
@@ -405,6 +438,9 @@ int main() {
     }
 
     if(Controller1.ButtonY.pressing()){
+      Controller1.rumble("-");
+    }
+    if(LeftFront.temperature(vex::temperatureUnits::fahrenheit) > 120 || RightFront.temperature(vex::temperatureUnits::fahrenheit) > 120){
       Controller1.rumble("-");
     }
 
