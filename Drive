@@ -1,9 +1,9 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
-/*    Author:       John Schmidt                                              */
-/*    Created:      Thu Dec 17 2019                                           */
-/*    Description:  Competition Code                                          */
+/*    Author:       C:\Users\StudentB                                         */
+/*    Created:      Mon Jan 27 2020                                           */
+/*    Description:  V5 project                                                */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
@@ -12,25 +12,13 @@
 
 using namespace vex;
 
-competition Competition;
-
-vex::motor LeftFront         = vex::motor( vex::PORT12 ); //
-vex::motor LeftBack           = vex::motor( vex::PORT4 ); //
-vex::motor RightFront         = vex::motor( vex::PORT1 ); //
-vex::motor RightBack         = vex::motor( vex::PORT10 ); //
-vex::motor ArmMotor           = vex::motor( vex::PORT5 ); //
-vex::motor TrayMotor         = vex::motor( vex::PORT19 ); //
-vex::motor LeftIntake         = vex::motor( vex::PORT3 ); //
-vex::motor RightIntake       = vex::motor( vex::PORT18 ); //
-
-vex::controller Controller1          = vex::controller();   
-
+//Constant Definitions
 int DriverDuration = 20;
 float DriveKp = 0.04;
 float DriveKi = 0;
 float DriveKd = 0;
 
-float ArmKp = 0;
+float ArmKp = 0.1;
 float ArmKi = 0;
 float ArmKd = 0;
 
@@ -38,15 +26,18 @@ float IntakeKp = 0.04;
 float IntakeKi = 0;
 float IntakeKd = 0;
 
-float TrayKp = 0;
-float TrayKi = 0;
+float TrayKp = 0.1;
+float TrayKi = 0.05;
 float TrayKd = 0;
 
 float LturnK = 1;
 float RturnK = 1;
 float turnK = 0.3;
 
-class PID 
+bool LED_On;
+bool trayLoop = false;
+
+class PID
 {
   public:
   int Target;
@@ -57,27 +48,46 @@ class PID
   int Integral;
   int Derivative;
 
-  PID(int a, int b, int c, int d) {
+  bool auton;
+  float velCap;
+  float acc;
+  float base;
+  int sign;
+
+  PID(int a, int b, int c, int d, bool e) {
     Target = a;
     Actual = b;
     LastError = c;
     LastTarget = d;
+    auton = e;
   }
-  
+
   void update(){
+    Error = Target - Actual; //Proportional calculations
 
-    Error = Target - Actual; //Proportional Calculations
-
-    if(abs(Target - LastTarget) < 1 ){
+    if(abs(Target - LastTarget) < 1 ){ //Change this to target, maybe if trayloop or all the time
       Integral = Integral + Error; //Integral Calculations
     } else {
-      Integral = 0; //Decays the integral value if the target values are different
+      Integral = 0;
     }
 
     Derivative = Error - LastError; //Derivative Calculations
 
     LastError = Error;
     LastTarget = Target;
+
+    if(auton){
+      sign = Error / std::abs(Error);
+      acc = acc + base;
+
+      if(acc > velCap){
+        acc = velCap;
+      }
+      //ADD if over .75, subtract acc instead of add to velBottom
+      if(std::abs(Error) > acc){
+        Error = acc;
+      }
+    }    
   }
 
   void setTarget(int a){
@@ -87,22 +97,93 @@ class PID
   void setActual(int a){
     Actual = a;
   }
+
+  void setAuton(bool a){
+    auton = a;
+  }
+
+  void setVelCap(float a){
+    velCap = a;
+  }
+
+  void setAcc(float a){
+    acc = a;
+  }
+
+  void setBase(float a){
+    base = a;
+  }
 };
 
-PID LeftSide(0, 0, 0, 0);
-PID RightSide(0, 0, 0, 0);
-PID Arm(0, 0, 0, 0);
-PID Tray(0, 0, 0, 0);
-PID LIntake(0, 0, 0, 0);
-PID RIntake(0, 0, 0, 0);
+PID LeftSide(0, 0, 0, 0, true);
+PID RightSide(0, 0, 0, 0, true);
+PID Arm(0, 0, 0, 0, false);
+PID Tray(0, 0, 0, 0, false);
+PID LIntake(0, 0, 0, 0, false);
+PID RIntake(0, 0, 0, 0, false);
 
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
+int selected;
+bool correct;
+int autonColor; //blue is negative, red is positive
+
+void auton_selector(void){
+  selected = -1;
+  correct = false;
+  autonColor = 0;
+  while(autonColor == 0){
+    Brain.Screen.clearLine();
+    Brain.Screen.printAt(10, 15, "Blue or Red? (Left is b, right is r)");
+    if(Controller1.ButtonLeft.pressing()){
+      autonColor = -1;
+      vex::task::sleep(100);
+    } else if(Controller1.ButtonRight.pressing()){
+      autonColor = 1;
+      vex::task::sleep(100);
+    } else if(Controller1.ButtonDown.pressing()){
+      vex::task::sleep(100);
+      return;
+    }
+    vex::task::sleep(20);
+  }
+  while(selected < 0){
+    Brain.Screen.clearLine();
+    Brain.Screen.printAt(10,15, "Protected or unprotected (Left is p, right is u");
+    if(Controller1.ButtonLeft.pressing()){
+      selected = 1;
+      vex::task::sleep(100);
+    } else if(Controller1.ButtonRight.pressing()){
+      selected = 2;
+      vex::task::sleep(100);
+    }
+    vex::task::sleep(20);
+  }
+  Brain.Screen.clearLine();
+  if(autonColor == -1 && selected == 1){
+    Brain.Screen.printAt(10, 15, "You chose Blue protected. Correct?");
+  } else if(autonColor == -1 && selected == 2){
+    Brain.Screen.printAt(10, 15, "You chose Blue unprotected. Correct?");
+  } else if(autonColor == 1 && selected == 1){
+    Brain.Screen.printAt(10, 15, "You chose Red protected. Correct?");
+  } else if(autonColor == 1 && selected == 2){
+    Brain.Screen.printAt(10, 15, "You chose Red unprotected. Correct?");
+  }
+  while(!correct){
+    if(Controller1.ButtonLeft.pressing()){
+      auton_selector();
+    } else if(Controller1.ButtonRight.pressing()){
+      correct = !correct;
+    }
+    vex::task::sleep(100);
+  }
+}
 
 void pre_auton(void) {
-  // Initializing Robot Configuration. DO NOT REMOVE!
+  //auton_selector();
+  
   LeftBack.resetPosition();
   LeftFront.resetPosition();
   RightFront.resetPosition();
@@ -120,8 +201,9 @@ void pre_auton(void) {
 
   ArmMotor.setStopping(vex::brakeType::hold);
   TrayMotor.setStopping(vex::brakeType::hold);
-  RightIntake.setStopping(vex::brakeType::hold);
-  LeftIntake.setStopping(vex::brakeType::hold);
+  RightIntake.setStopping(vex::brakeType::coast);
+  LeftIntake.setStopping(vex::brakeType::coast);
+
 }
 
 /*---------------------------------------------------------------------------*/
@@ -136,63 +218,23 @@ void setTargets(int Arm1, int Tray1, int LeIntake, int RiIntake){
   RIntake.setTarget(RiIntake);
 }
 
-float velCap;
-float targetLeft = 0;
-float targetRight = 0;
-
-int errorLeft;
-int errorRight;
-float kp = 0.1;
-float kpTurn = 0.3;
-float acc = 6;
-int voltageLeft = 0;
-int voltageRight = 0;
-int signLeft;
-int signRight;
-int actualLeft;
-int actualRight;
-
 int counter;
 int endCounter;
 
 void autonPID(){
-  actualLeft = ((LeftFront.position(vex::rotationUnits::deg) + LeftBack.position(vex::rotationUnits::deg))/2);
-  actualRight = ((RightFront.position(vex::rotationUnits::deg) + RightBack.position(vex::rotationUnits::deg))/2);
-
   counter = 0;
 
   while(counter < endCounter){
-    errorLeft = targetLeft - ((LeftFront.position(vex::rotationUnits::deg) + LeftBack.position(vex::rotationUnits::deg))/2);
-    errorRight = targetRight - ((RightFront.position(vex::rotationUnits::deg) + RightBack.position(vex::rotationUnits::deg))/2);
+    LeftSide.setActual((LeftFront.position(vex::rotationUnits::deg) + LeftBack.position(vex::rotationUnits::deg))/2);
+    RightSide.setActual((RightFront.position(vex::rotationUnits::deg) + RightBack.position(vex::rotationUnits::deg))/2);
 
-    signLeft = errorLeft / abs(errorLeft);
-    signRight = errorRight / abs(errorRight);
+    LeftSide.update();
+    RightSide.update();
 
-    if(signLeft == signRight){
-      voltageLeft = errorLeft * kp;
-      voltageRight = errorRight * kp;
-    } else{
-      voltageLeft = errorLeft * kpTurn;
-      voltageRight = errorRight * kpTurn;
-    }
-
-    velCap = velCap + acc;
-    if(velCap > 20){
-      velCap = 20;
-    }
-
-    if(abs(voltageLeft) > velCap) {
-      voltageLeft = velCap * signLeft;
-    }
-
-    if(abs(voltageRight) > velCap) {
-      voltageRight = velCap * signRight;
-    }
-
-    LeftFront.spin(vex::directionType::fwd, voltageLeft, vex::voltageUnits::volt);
-    LeftBack.spin(vex::directionType::fwd, voltageLeft, vex::voltageUnits::volt);
-    RightFront.spin(vex::directionType::fwd, voltageRight, vex::voltageUnits::volt);
-    RightBack.spin(vex::directionType::fwd, voltageRight, vex::voltageUnits::volt);
+    LeftFront.spin(vex::directionType::fwd, LeftSide.Error, vex::voltageUnits::volt);
+    LeftBack.spin(vex::directionType::fwd, LeftSide.Error, vex::voltageUnits::volt);
+    RightFront.spin(vex::directionType::fwd, RightSide.Error, vex::voltageUnits::volt);
+    RightBack.spin(vex::directionType::fwd, RightSide.Error, vex::voltageUnits::volt);
 
     Arm.setActual(ArmMotor.velocity(vex::velocityUnits::pct));
     Tray.setActual(TrayMotor.velocity(vex::velocityUnits::pct));
@@ -211,7 +253,6 @@ void autonPID(){
 
     counter = counter + 20;
     vex::task::sleep(20);
-
   }
 }
 
@@ -225,29 +266,35 @@ void stopMotors(){
   LeftIntake.stop();
   ArmMotor.stop();
   TrayMotor.stop();
+
 }
 
-void setAuton(float left, float right, int Arm1, int Tray1, int LeIntake, int RiIntake, int count){
-  targetLeft = 0;
-  targetRight = 0;
+void setAuton(float left, float right, float velCap, float acc, float base, int Arm1, int Tray1, int LeIntake, int RiIntake, int count){
   LeftBack.resetPosition();
   LeftFront.resetPosition();
   RightFront.resetPosition();
   RightBack.resetPosition();
 
+  LeftSide.setVelCap(velCap);
+  RightSide.setVelCap(velCap);
+  LeftSide.setAcc(acc);
+  RightSide.setAcc(acc);
+  LeftSide.setBase(base);
+  RightSide.setBase(base);
+
   setTargets(Arm1, Tray1, LeIntake, RiIntake);
-  right = right * -1;
+  //right = right * -1;
 
-  left = left * 26.2; //TUNE VALUES LATER
-  right = right * 26.2; //Converts values from ineches to degrees
-
-  targetLeft = targetLeft + left;
-  targetRight = targetRight + right;
+  left = left * 26.2;
+  right = right * 26.2;
+  
+  LeftSide.setTarget(left);
+  RightSide.setTarget(right);
   endCounter = count;
-  velCap =  0;
 }
 
 void driveCode(int duration){
+
   LeftSide.setActual(((LeftFront.velocity(vex::velocityUnits::pct) + LeftBack.velocity(vex::velocityUnits::pct))/2) * 0.4 );
   RightSide.setActual(((RightFront.velocity(vex::velocityUnits::pct) + RightBack.velocity(vex::velocityUnits::pct))/2) * 0.4 );
 
@@ -280,121 +327,102 @@ void driveCode(int duration){
   Brain.Screen.clearLine();
   Brain.Screen.printAt(10, 15, "Left temp: %f", LeftFront.temperature(vex::temperatureUnits::fahrenheit));  
   Brain.Screen.printAt(10, 30, "Right temp: %f", RightFront.temperature(vex::temperatureUnits::fahrenheit));
+  Brain.Screen.printAt(10, 60, "Arm Position: %f", trayPot.value(vex::rotationUnits::deg));
 
   Arm.setActual(ArmMotor.velocity(vex::velocityUnits::pct));
-  Tray.setActual(TrayMotor.velocity(vex::velocityUnits::pct));
   RIntake.setActual(RightIntake.velocity(vex::velocityUnits::pct));
   LIntake.setActual(LeftIntake.velocity(vex::velocityUnits::pct));
 
   Arm.update();
-  Tray.update();
   RIntake.update();
   LIntake.update();
 
   ArmMotor.spin(vex::directionType::fwd, ((Arm.Target*( 1 )) + (Arm.Error*( ArmKp )) + (Arm.Integral*( ArmKi )) + (Arm.Derivative*( ArmKd ))), vex::voltageUnits::volt);
-  TrayMotor.spin(vex::directionType::fwd, ((Tray.Target*( 1 )) + (Tray.Error*( TrayKp )) + (Tray.Integral*( TrayKi )) + (Tray.Derivative*( TrayKd ))), vex::voltageUnits::volt);
   LeftIntake.spin(vex::directionType::fwd, ((LIntake.Target*( 1 )) + (LIntake.Error*( IntakeKp )) + (LIntake.Integral*( IntakeKi )) + (LIntake.Derivative*( IntakeKd ))), vex::voltageUnits::volt);
   RightIntake.spin(vex::directionType::rev, ((RIntake.Target*( 1 )) + (RIntake.Error*( IntakeKp )) + (RIntake.Integral*( IntakeKi )) + (RIntake.Derivative*( IntakeKd ))), vex::voltageUnits::volt);
-
+  if(!trayLoop){
+    Tray.setActual(TrayMotor.velocity(vex::velocityUnits::pct));
+    Tray.update();
+    TrayMotor.spin(vex::directionType::fwd, ((Tray.Target*( 1 )) + (Tray.Error*( TrayKp ))), vex::voltageUnits::volt);
+  } else if(trayLoop){
+    Tray.setActual(trayPot.value(vex::rotationUnits::deg));
+    Tray.update();
+    TrayMotor.spin(vex::directionType::fwd, (Tray.Error*( TrayKp )) + (Tray.Integral*( TrayKi )) + (Tray.Derivative*( TrayKd )), vex::voltageUnits::volt);
+  }
+  
   vex::task::sleep(duration);
 }
 
 void autonomous(void) {
-  //deploy the bot
   
-  //Drive forwarad 1/2 a tile, lifts tray
-  acc = 5;
-  velCap = 8;
-  setAuton(5, 5, 0, -100, 0, 0, 1850);
+  //Collect first two cubes and deploy
+  setAuton(29, 29, 4, 0.2, 1, 0, 0, 100, 100, 2400);
   autonPID();
   stopMotors();
-  
-  RightSide.setTarget(29);
-  LeftSide.setTarget(-29);
+
+  vex::task::sleep(100);
+
+  //Rotate after collecting first cubes
+  LeftSide.setTarget(30);
+  RightSide.setTarget(-30);
+  for(int i=0; i<8; i++){
+    driveCode(DriverDuration);
+  }
+  stopMotors();
+
+  //Backwards to wall
+  LeftSide.setTarget(-40);
+  RightSide.setTarget(-40);
   for(int i=0; i<30; i++){
     driveCode(DriverDuration);
   }
   stopMotors();
-  LeftFront.resetRotation();
-  LeftBack.resetRotation();
-  RightFront.resetRotation();
-  RightBack.resetRotation();
-  setAuton(0, 0, 0, 100, 0, 0, 2500);
+
+  //Reset against wall
+  LeftSide.setTarget(-15);
+  for(int i=0; i<7; i++){
+    driveCode(DriverDuration);
+  } 
+  stopMotors();
+
+  //Collect the four cubes
+  setAuton(38, 38, 5, 0.5, 1, 0, 0, 100, 100, 2500);
   autonPID();
   stopMotors();
 
-  //blue back auton
-  
-  acc = 1.1;
-  velCap = 2.2;
-  setAuton(7, 7, 0, 0, 100, 100, 500);
-  autonPID();
-  stopMotors();
-  
-  acc = 0.08;
-  velCap = 1.8;
-  setAuton(33, 30, 0, 0, 100, 100, 2750);
-  autonPID();
-  stopMotors();
-
-  LeftSide.setTarget(-50);
-  RightSide.setTarget(50);
-  for(int i=0; i<76; i++){
+  //Rotate to goal 
+  LeftSide.setTarget(-40);
+  RightSide.setTarget(40);
+  for(int i=0; i<17; i++){
     driveCode(DriverDuration);
   }
+  stopMotors();
 
-  acc = 1.1;
-  velCap = 3;
-  setAuton(5, 5, 0, 0, 0, 0, 400);
+  //Drive to goal
+  setAuton(38, 38, 6, 1, 1, 0, 0, 0, 0, 2600);
   autonPID();
   stopMotors();
 
-  LeftSide.setTarget(-15); //spin to goal zone
-  RightSide.setTarget(-15);
-  driveCode(DriverDuration);
-  vex::task::sleep(1020);
-  LeftSide.setTarget(0);
-  RightSide.setTarget(0);
+  //Stack
+  trayLoop = true;
+  Tray.setTarget(0); //Change value to tray up 
+  for(int i=0; i<50; i++){
+    driveCode(DriverDuration);
+  }
   stopMotors();
 
-  acc = 0.5;
-  velCap = 1.6;
-  setAuton(4, 10, 0, 0, 0, 0, 800);
-  autonPID();
-  stopMotors();
-
-  setAuton(0, 0, 0, 0, -4, -4, 600);
-  autonPID();
-  stopMotors();
-
-  setAuton(6, 6, 0, -9, 0, 0, 1450);
-  autonPID();
-  stopMotors();
-
-  setAuton(0, 0, 0, -5, 0, 0, 500);
-  autonPID();
-  stopMotors();
-
-  acc = 0.3;
-  velCap = 2;
-  setAuton(30, 30, 0, -5, -5, -5, 1500);
-  autonPID();
-  stopMotors();
-
-  acc = 0.1;
-  velCap = 2;
-  setAuton(-15, -15, 0, 5, -15, -15, 800);
-  stopMotors();
-
+  //Back away 
+  RIntake.setTarget(-10);
+  LIntake.setTarget(-10);
   RightSide.setTarget(15);
   LeftSide.setTarget(-15);
-  driveCode(DriverDuration);
-  vex::task::sleep(1000);
+  Tray.setTarget(-5);
+  for(int i=0; i<15; i++){
+    driveCode(DriverDuration);
+  }
   stopMotors();
+  
 }
-
-
-
 /*---------------------------------------------------------------------------*/
 /*                              User Control Task                            */
 /*                                                                           */
@@ -402,29 +430,32 @@ void autonomous(void) {
 
 void usercontrol(void) {
   
+  TrayMotor.setStopping(vex::brakeType::hold);
+  LeftSide.setAuton(false);
+  RightSide.setAuton(false);
+
   while(1){
     if(Controller1.ButtonA.pressing()){
-      Tray.setTarget(-18);
-    } else if(Controller1.ButtonB.pressing()){
-      //if(TrayMotor.rotation(vex::rotationUnits::deg) < -120){ //Adds a stop to keep the tray from rotating backwards too far
-      Tray.setTarget(90);
-      //} else {
-      //  Tray.setTarget(0);
-      //}
+      trayLoop = false;
+      Tray.setTarget(11);
+    } else if(Controller1.ButtonY.pressing()){
+      trayLoop = false;
+      Tray.setTarget(-20);
+    } else if (Controller1.ButtonUp.pressing()){   //CHANGE THIS- SAME AS LED
+      trayLoop = false;
+      Tray.setTarget(3);
+    } else if (Controller1.ButtonLeft.pressing()){
+      trayLoop = true;
+      Tray.setTarget(118); //CHANGE THIS - TRAY VALUE AT TOP
     } else {
+      trayLoop = false;
       Tray.setTarget(0);
-    }
-    if(Controller1.ButtonLeft.pressing()){
-      Tray.setTarget(25);
     }
 
     if(Controller1.ButtonL1.pressing()){
       Arm.setTarget(100);
     } else if(Controller1.ButtonL2.pressing()){
       Arm.setTarget(-100);
-      //if(TrayMotor.rotation(vex::rotationUnits::deg) > -450){ //Moves tray up with the arm to avoid catching on each other
-      TrayMotor.startRotateFor(5, vex::rotationUnits::rev, 60, vex::velocityUnits::pct);
-      //}
     } else {
       Arm.setTarget(0);
     }
@@ -440,7 +471,7 @@ void usercontrol(void) {
       LIntake.setTarget(0);
     }
     
-    RightSide.setTarget((Controller1.Axis1.value() - Controller1.Axis3.value())/2);
+    RightSide.setTarget((Controller1.Axis3.value() - Controller1.Axis1.value())/2);
     LeftSide.setTarget((Controller1.Axis1.value() + Controller1.Axis3.value())/2);
 
     if(Controller1.ButtonDown.pressing()){
@@ -448,37 +479,25 @@ void usercontrol(void) {
       LIntake.setTarget(-10);
       RightSide.setTarget(15);
       LeftSide.setTarget(-15);
-      Tray.setTarget(20);
+      Tray.setTarget(-5);
     }
 
-    if(Controller1.ButtonY.pressing()){
-      /**
-      acc = 5;
-      velCap = 8;
-      setAuton(5, 5, 0, -100, 0, 0, 1850);
-      autonPID();
-      stopMotors();
-  
-      RightSide.setTarget(29);
-      LeftSide.setTarget(-29);
-      for(int i=0; i<30; i++){
-        driveCode(DriverDuration);
+    if(Controller1.ButtonUp.pressing()){
+      LED_On = !LED_On;
+      if(LED_On){
+        //LED.state(100, vex::percentUnits::pct);
+        vex::task::sleep(200);
+      } else{
+        //LED.state(0, vex::percentUnits::pct);
+        vex::task::sleep(200);
       }
-      stopMotors();
-      LeftFront.resetRotation();
-      LeftBack.resetRotation();
-      RightFront.resetRotation();
-      RightBack.resetRotation();
-      setAuton(0, 0, 0, 100, 0, 0, 2500);
-      autonPID();
-      stopMotors();
-      **/
     }
 
-    if(LeftFront.temperature(vex::temperatureUnits::fahrenheit) > 120 || RightFront.temperature(vex::temperatureUnits::fahrenheit) > 120){
+    if(LeftFront.temperature(vex::temperatureUnits::fahrenheit) > 115 || RightFront.temperature(vex::temperatureUnits::fahrenheit) > 115 || LeftBack.temperature(vex::temperatureUnits::fahrenheit) > 115 || RightBack.temperature(vex::temperatureUnits::fahrenheit) > 115){
+      Controller1.rumble("-     ");
+    } else if(LeftFront.temperature(vex::temperatureUnits::fahrenheit) > 125 || RightFront.temperature(vex::temperatureUnits::fahrenheit) > 125 || LeftBack.temperature(vex::temperatureUnits::fahrenheit) > 125 || RightBack.temperature(vex::temperatureUnits::fahrenheit) > 125){
       Controller1.rumble("-");
     }
-    
 
     driveCode(DriverDuration);
     
@@ -486,6 +505,7 @@ void usercontrol(void) {
 }
 
 int main() {
+
   // Callbacks for autonomous and driver control periods.
   Competition.autonomous(autonomous);
   Competition.drivercontrol(usercontrol);
