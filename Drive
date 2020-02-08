@@ -364,7 +364,7 @@ void autonomous(void) {
   stopMotors();
 
   //Collect first two cubes and deploy
-  setAuton(28, 28, 4, 0.2, 1, 0, 0, 65, 65, 2400);
+  setAuton(29, 29, 4, 0.2, 1, 0, 0, 65, 65, 2400);
   autonPID();
   stopMotors();
 
@@ -373,7 +373,7 @@ void autonomous(void) {
   //Rotate after collecting first cubes
   LeftSide.setTarget(-30);
   RightSide.setTarget(30);
-  for(int i=0; i<8; i++){
+  for(int i=0; i<9; i++){
     driveCode(DriverDuration);
   }
   stopMotors();
@@ -381,7 +381,7 @@ void autonomous(void) {
   //Backwards to wall
   LeftSide.setTarget(-30);
   RightSide.setTarget(-30);
-  for(int i=0; i<45; i++){
+  for(int i=0; i<47; i++){
     driveCode(DriverDuration);
   }
   stopMotors();
@@ -391,7 +391,7 @@ void autonomous(void) {
   //Reset against wall
   RightSide.setTarget(-30);
   LeftSide.setTarget(10);
-  for(int i=0; i<13; i++){
+  for(int i=0; i<11; i++){
     driveCode(DriverDuration);
   } 
   stopMotors();
@@ -402,15 +402,15 @@ void autonomous(void) {
   stopMotors();
   
   //Rotate to goal 
-  LeftSide.setTarget(20);
-  RightSide.setTarget(-20);
-  for(int i=0; i<46; i++){
+  LeftSide.setTarget(19);
+  RightSide.setTarget(-19);
+  for(int i=0; i<48; i++){
     driveCode(DriverDuration);
   }
   stopMotors();
 
   //Drive to goal
-  setAuton(14, 14, 6, 0.4, 1, 0, 0, 0, 0, 1900);
+  setAuton(19.3, 19.3, 6, 0.6, 1.2, 0, 0, 0, 0, 1900);
   autonPID();
   stopMotors();
 
@@ -419,16 +419,20 @@ void autonomous(void) {
   RightFront.setStopping(vex::brakeType::hold);
   RightBack.setStopping(vex::brakeType::hold);
   
-  setAuton(0, 0, 0, 0, 0, 0, 0, -10, -10, 80);
+  vex::task::sleep(60);
+
+  setAuton(0, 0, 0, 0, 0, 0, 0, -10, -10, 175);
   autonPID();
   stopMotors();
 
-  vex::task::sleep(120);
+  vex::task::sleep(450);
   
   //Stack
   trayLoop = true;
-  Tray.setTarget(1280); //Change value to tray up 
-  for(int i=0; i<80; i++){
+  RIntake.setTarget(0);
+  LIntake.setTarget(0);
+  Tray.setTarget(1300); //Change value to tray up 
+  for(int i=0; i<120; i++){
     driveCode(DriverDuration);
   }
   stopMotors();
@@ -437,6 +441,11 @@ void autonomous(void) {
   LeftBack.setStopping(vex::brakeType::coast);
   RightFront.setStopping(vex::brakeType::coast);
   RightBack.setStopping(vex::brakeType::coast);
+  vex::task::sleep(100);
+
+  setAuton(6, 6, 1, 0.5, 0.5, 0, 0, 0, 0, 300);
+  autonPID();
+  stopMotors();
 
   //Back away 
   RIntake.setTarget(-10);
