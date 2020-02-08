@@ -26,8 +26,8 @@ float IntakeKp = 0.04;
 float IntakeKi = 0;
 float IntakeKd = 0;
 
-float TrayKp = 0.1;
-float TrayKi = 0.05;
+float TrayKp = 0.02;
+float TrayKi = 0;
 float TrayKd = 0;
 
 float LturnK = 1;
@@ -327,7 +327,7 @@ void driveCode(int duration){
   Brain.Screen.clearLine();
   Brain.Screen.printAt(10, 15, "Left temp: %f", LeftFront.temperature(vex::temperatureUnits::fahrenheit));  
   Brain.Screen.printAt(10, 30, "Right temp: %f", RightFront.temperature(vex::temperatureUnits::fahrenheit));
-  Brain.Screen.printAt(10, 60, "Arm Position: %f", trayPot.value(vex::rotationUnits::deg));
+  Brain.Screen.printAt(10, 60, "Arm Position: %f", TrayMotor.position(vex::rotationUnits::deg));
 
   Arm.setActual(ArmMotor.velocity(vex::velocityUnits::pct));
   RIntake.setActual(RightIntake.velocity(vex::velocityUnits::pct));
@@ -345,7 +345,7 @@ void driveCode(int duration){
     Tray.update();
     TrayMotor.spin(vex::directionType::fwd, ((Tray.Target*( 1 )) + (Tray.Error*( TrayKp ))), vex::voltageUnits::volt);
   } else if(trayLoop){
-    Tray.setActual(trayPot.value(vex::rotationUnits::deg));
+    Tray.setActual(TrayMotor.position(vex::rotationUnits::deg));
     Tray.update();
     TrayMotor.spin(vex::directionType::fwd, (Tray.Error*( TrayKp )) + (Tray.Integral*( TrayKi )) + (Tray.Derivative*( TrayKd )), vex::voltageUnits::volt);
   }
@@ -405,7 +405,7 @@ void autonomous(void) {
 
   //Stack
   trayLoop = true;
-  Tray.setTarget(0); //Change value to tray up 
+  Tray.setTarget(1250); //Change value to tray up 
   for(int i=0; i<50; i++){
     driveCode(DriverDuration);
   }
@@ -421,7 +421,7 @@ void autonomous(void) {
     driveCode(DriverDuration);
   }
   stopMotors();
-  
+
 }
 /*---------------------------------------------------------------------------*/
 /*                              User Control Task                            */
@@ -441,12 +441,9 @@ void usercontrol(void) {
     } else if(Controller1.ButtonY.pressing()){
       trayLoop = false;
       Tray.setTarget(-20);
-    } else if (Controller1.ButtonUp.pressing()){   //CHANGE THIS- SAME AS LED
-      trayLoop = false;
-      Tray.setTarget(3);
     } else if (Controller1.ButtonLeft.pressing()){
       trayLoop = true;
-      Tray.setTarget(118); //CHANGE THIS - TRAY VALUE AT TOP
+      Tray.setTarget(1290); //CHANGE THIS - TRAY VALUE AT TOP
     } else {
       trayLoop = false;
       Tray.setTarget(0);
@@ -477,9 +474,8 @@ void usercontrol(void) {
     if(Controller1.ButtonDown.pressing()){
       RIntake.setTarget(-10);
       LIntake.setTarget(-10);
-      RightSide.setTarget(15);
+      RightSide.setTarget(-15);
       LeftSide.setTarget(-15);
-      Tray.setTarget(-5);
     }
 
     if(Controller1.ButtonUp.pressing()){
