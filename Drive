@@ -359,7 +359,7 @@ void autonomous(void) {
   autonPID();
   stopMotors();
 
-  setAuton(0, 0, 0, 0, 0, 0, -29, 0, 0, 350);
+  setAuton(0, 0, 0, 0, 0, 0, -29, 0, 0, 375);
   autonPID();
   stopMotors();
 
@@ -370,10 +370,17 @@ void autonomous(void) {
 
   vex::task::sleep(100);
 
+  LeftSide.setTarget(-6);
+  RightSide.setTarget(-6);
+  for(int i=0; i<5; i++){
+    driveCode(DriverDuration);
+  }
+  stopMotors();
+
   //Rotate after collecting first cubes
-  LeftSide.setTarget(-30);
-  RightSide.setTarget(30);
-  for(int i=0; i<9; i++){
+  LeftSide.setTarget(30);
+  RightSide.setTarget(-30);
+  for(int i=0; i<10; i++){
     driveCode(DriverDuration);
   }
   stopMotors();
@@ -389,28 +396,28 @@ void autonomous(void) {
   vex::task::sleep(100);
 
   //Reset against wall
-  RightSide.setTarget(-30);
-  LeftSide.setTarget(10);
-  for(int i=0; i<11; i++){
+  RightSide.setTarget(10);
+  LeftSide.setTarget(-30);
+  for(int i=0; i<13; i++){
     driveCode(DriverDuration);
   } 
   stopMotors();
 
   //Collect the four cubes
-  setAuton(39, 39, 5, 0.5, 1, 0, 0, 90, 90, 2700);
+  setAuton(38, 38, 5, 0.5, 1, 0, 0, 90, 90, 2700);
   autonPID();
   stopMotors();
   
   //Rotate to goal 
-  LeftSide.setTarget(19);
-  RightSide.setTarget(-19);
-  for(int i=0; i<48; i++){
+  LeftSide.setTarget(-18);
+  RightSide.setTarget(18);
+  for(int i=0; i<50; i++){
     driveCode(DriverDuration);
   }
   stopMotors();
 
   //Drive to goal
-  setAuton(19.3, 19.3, 6, 0.6, 1.2, 0, 0, 0, 0, 1900);
+  setAuton(20.5, 20.5, 6.1, 0.6, 1.2, 0, 0, 0, 0, 1900);
   autonPID();
   stopMotors();
 
@@ -431,7 +438,7 @@ void autonomous(void) {
   trayLoop = true;
   RIntake.setTarget(0);
   LIntake.setTarget(0);
-  Tray.setTarget(1300); //Change value to tray up 
+  Tray.setTarget(1290); //Change value to tray up 
   for(int i=0; i<120; i++){
     driveCode(DriverDuration);
   }
@@ -443,7 +450,7 @@ void autonomous(void) {
   RightBack.setStopping(vex::brakeType::coast);
   vex::task::sleep(100);
 
-  setAuton(6, 6, 1, 0.5, 0.5, 0, 0, 0, 0, 300);
+  setAuton(10, 10, 3, 1, 0.5, 0, 0, 0, 0, 900);
   autonPID();
   stopMotors();
 
