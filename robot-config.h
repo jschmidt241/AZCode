@@ -4,6 +4,8 @@ extern brain Brain;
 extern controller Controller1;
 extern competition Competition;
 
+extern gyro gyroscope;
+
 extern motor LeftFront;
 extern motor LeftBack;
 extern motor RightFront;

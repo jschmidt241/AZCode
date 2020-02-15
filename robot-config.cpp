@@ -6,14 +6,16 @@ using namespace vex;
 brain Brain;
 competition Competition;
 
-vex::motor LeftFront         = vex::motor( vex::PORT12 );
-vex::motor LeftBack          = vex::motor( vex::PORT14 );
-vex::motor RightFront         = vex::motor( vex::PORT4, true );
-vex::motor RightBack         = vex::motor( vex::PORT10, true );
-vex::motor ArmMotor           = vex::motor( vex::PORT5 );
-vex::motor TrayMotor         = vex::motor( vex::PORT19 );
-vex::motor LeftIntake        = vex::motor( vex::PORT13 );
-vex::motor RightIntake        = vex::motor( vex::PORT1 );
+vex::gyro gyroscope                         = vex::gyro( Brain.ThreeWirePort.D ); 
+
+vex::motor LeftFront                                 = vex::motor( vex::PORT12 );
+vex::motor LeftBack                                  = vex::motor( vex::PORT14 );
+vex::motor RightFront                           = vex::motor( vex::PORT4, true );
+vex::motor RightBack                           = vex::motor( vex::PORT10, true );
+vex::motor ArmMotor                                   = vex::motor( vex::PORT5 );
+vex::motor TrayMotor                                 = vex::motor( vex::PORT19 );
+vex::motor LeftIntake   = vex::motor( vex::PORT13, vex::gearSetting::ratio36_1 );
+vex::motor RightIntake   = vex::motor( vex::PORT1, vex::gearSetting::ratio36_1 );
 
 vex::controller Controller1          = vex::controller();
 
