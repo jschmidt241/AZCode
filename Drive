@@ -443,7 +443,7 @@ void autonomous(void) {
   turning = true;
   LeftSide.setAuton(false);
   RightSide.setAuton(false);
-  setAuton(-54, 54, 0, 0, 0, 0, 0, 0, 0, 500);
+  setAuton(-54, 54, 0, 0, 0, 0, 0, 0, 0, 490);
   autonPID();
   stopMotors();
   turning = false;
@@ -458,7 +458,7 @@ void autonomous(void) {
   turning = true;
   LeftSide.setAuton(false);
   RightSide.setAuton(false);
-  setAuton(9, -9, 0, 0, 0, 0, 0, 0, 0, 500);
+  setAuton(9, -9, 0, 0, 0, 0, 0, 0, 0, 475);
   autonPID();
   stopMotors();
   turning = false;
@@ -474,7 +474,7 @@ void autonomous(void) {
   turning = true;
   LeftSide.setAuton(false);
   RightSide.setAuton(false);
-  setAuton(145, -145, 5, 0.2, 1, 0, 0, 80, 80, 900);
+  setAuton(128, -128, 5, 0.2, 1, 0, 0, 80, 80, 875);
   autonPID();
   stopMotors();
   turning = false;
@@ -482,21 +482,21 @@ void autonomous(void) {
   RightSide.setAuton(true);
 
   //Drive to goal
-  setAuton(20, 20, 8, 0.6, 1.2, 0, 0, 0, 0, 1000);
+  setAuton(20, 20, 8, 0.6, 1.2, 0, 0, 0, 0, 530);
   autonPID();
   stopMotors();
 
-  vex::task::sleep(200);
+  vex::task::sleep(45);
 
   //Outtake the cubes before stacking
-  setAuton(0, 0, 0, 0, 0, 0, 0, -15, -15, 350);
+  setAuton(0, 0, 0, 0, 0, 0, 0, -38, -38, 530);
   autonPID();
   stopMotors();
 
   //Stack
-  vex::task::sleep(450);
+  vex::task::sleep(30);
   trayLoop = true;
-  setAuton(0, 0, 0, 0, 0, 0, 2250, 0, 0, 2300);
+  setAuton(3, 3, 1, 0.1, 0.1, 0, 2375, 0, 0, 2730);
   autonPID();
   stopMotors(); 
   trayLoop = false;
@@ -507,7 +507,7 @@ void autonomous(void) {
   stopMotors();
 
   //Back away
-  setAuton(-20, -20, 6, 0.1, 0.5, 0, -10, -10, -10, 300);
+  setAuton(-20, -20, 6, 0.1, 0.5, 0, -10, -15, -15, 300);
   autonPID();
   stopMotors();
 
