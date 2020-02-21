@@ -26,9 +26,9 @@ float IntakeKp = 0.04;
 float IntakeKi = 0;
 float IntakeKd = 0;
 
-float TrayKp = 0.07;
-float TrayKi = 0;
-float TrayKd = 0;
+float TrayKp = 0.06;
+float TrayKi = 0.02;
+float TrayKd = 0.01;
 
 float LturnK = 1;
 float RturnK = 1;
@@ -40,7 +40,6 @@ bool trayLoop = false;
 bool turning = false;
 
 double timerNum;
-
 
 class PID
 {
@@ -70,7 +69,7 @@ class PID
   void update(){
     Error = Target - Actual; //Proportional calculations
 
-    if(abs(Target - Error) < 0.05 ){ //Change this to target, maybe if trayloop or all the time
+    if(abs(Error) < 20 ){ 
       Integral = 0; //Integral Calculations
     } else {
       Integral = Integral + Error;
@@ -359,7 +358,7 @@ void stopMotors(){
   RightIntake.stop();
 }
 
-void driveCode(int duration){
+void driveCode( int duration ){
 
   LeftSide.setActual(((LeftFront.velocity(vex::velocityUnits::pct) + LeftBack.velocity(vex::velocityUnits::pct))/2) * 0.4 );
   RightSide.setActual(((RightFront.velocity(vex::velocityUnits::pct) + RightBack.velocity(vex::velocityUnits::pct))/2) * 0.4 );
@@ -421,9 +420,11 @@ void driveCode(int duration){
   vex::task::sleep(duration);
 }
 
-void autonomous(void) {
+void autonomous( void ) {
   
   Brain.resetTimer();
+  LeftSide.setAuton(true);
+  RightSide.setAuton(true);
 
   setAuton(0, 0, 0, 0, 0, 0, 100, 0, 0, 700);
   autonPID();
@@ -535,7 +536,7 @@ void usercontrol(void) {
   while(1){
     if(Controller1.ButtonA.pressing()){
       trayLoop = false;
-      Tray.setTarget(11);
+      Tray.setTarget(20);
     } else if(Controller1.ButtonY.pressing()){
       trayLoop = false;
       Tray.setTarget(-20);
@@ -570,8 +571,6 @@ void usercontrol(void) {
     LeftSide.setTarget((Controller1.Axis1.value() + Controller1.Axis3.value())/2);
 
     if(Controller1.ButtonDown.pressing()){
-      LIntake.setTarget(-20);
-      RIntake.setTarget(-20);
 
       if(std::abs(Brain.timer(vex::timeUnits::msec) - timerNum) < 750){
         Tray.setTarget(-25);
