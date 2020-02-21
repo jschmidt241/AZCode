@@ -434,7 +434,7 @@ void autonomous( void ) {
   autonPID();
   stopMotors();
 
-  //Collect first two cubes and deploy
+  //Collect first two cubes and finish deploy
   setAuton(30, 30, 4, 0.2, 1, 0, 0, 80, 80, 2380);
   autonPID();
   stopMotors();
@@ -444,7 +444,7 @@ void autonomous( void ) {
   turning = true;
   LeftSide.setAuton(false);
   RightSide.setAuton(false);
-  setAuton(-54, 54, 0, 0, 0, 0, 0, 0, 0, 490);
+  setAuton(54, -54, 0, 0, 0, 0, 0, 0, 0, 490);
   autonPID();
   stopMotors();
   turning = false;
@@ -459,7 +459,7 @@ void autonomous( void ) {
   turning = true;
   LeftSide.setAuton(false);
   RightSide.setAuton(false);
-  setAuton(9, -9, 0, 0, 0, 0, 0, 0, 0, 475);
+  setAuton(-9, 9, 0, 0, 0, 0, 0, 0, 0, 475);
   autonPID();
   stopMotors();
   turning = false;
@@ -475,7 +475,7 @@ void autonomous( void ) {
   turning = true;
   LeftSide.setAuton(false);
   RightSide.setAuton(false);
-  setAuton(128, -128, 5, 0.2, 1, 0, 0, 80, 80, 875);
+  setAuton(-128, 128, 5, 0.2, 1, 0, 0, 80, 80, 875);
   autonPID();
   stopMotors();
   turning = false;
