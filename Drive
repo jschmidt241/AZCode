@@ -426,11 +426,15 @@ void autonomous( void ) {
   LeftSide.setAuton(true);
   RightSide.setAuton(true);
 
-  setAuton(0, 0, 0, 0, 0, 0, 100, -100, -100, 700);
+  setAuton(0, 0, 0, 0, 0, -100, 100, -100, -100, 1000);
   autonPID();
   stopMotors();
 
-  setAuton(0, 0, 0, 0, 0, 0, -100, 0, 0, 700);
+  setAuton(0, 0, 0, 0, 0, -100, -100, 0, 0, 1000);
+  autonPID();
+  stopMotors();
+
+  setAuton(0, 0, 0, 0, 0, 100, 0, 0, 0, 300);
   autonPID();
   stopMotors();
 
