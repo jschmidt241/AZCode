@@ -426,16 +426,20 @@ void autonomous( void ) {
   LeftSide.setAuton(true);
   RightSide.setAuton(true);
 
-  setAuton(0, 0, 0, 0, 0, 0, 100, -100, -100, 700);
+  setAuton(0, 0, 0, 0, 0, 0, 0, -100, -100, 400);
   autonPID();
   stopMotors();
 
-  setAuton(0, 0, 0, 0, 0, 0, -100, 0, 0, 700);
+  setAuton(0, 0, 0, 0, 0, -100, 0, 0, 0, 1750);
+  autonPID();
+  stopMotors();
+
+  setAuton(0, 0, 0, 0, 0, 100, 0, 0, 0, 300);
   autonPID();
   stopMotors();
 
   //Collect first two cubes and deploy
-  setAuton(30, 30, 4, 0.2, 1, 0, 0, 80, 80, 2380);
+  setAuton(30, 30, 4, 0.2, 1, 30, 0, 80, 80, 2380);
   autonPID();
   stopMotors();
 
@@ -497,7 +501,7 @@ void autonomous( void ) {
   //Stack
   vex::task::sleep(30);
   trayLoop = true;
-  setAuton(3, 3, 1, 0.1, 0.1, 0, 2375, 0, 0, 2730);
+  setAuton(3, 3, 1, 0.1, 0.1, 0, 2425, 0, 0, 2730);
   autonPID();
   stopMotors(); 
   trayLoop = false;

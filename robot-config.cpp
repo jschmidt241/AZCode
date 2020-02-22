@@ -15,7 +15,7 @@ vex::motor RightBack                           = vex::motor( vex::PORT10, true )
 vex::motor ArmMotor                                   = vex::motor( vex::PORT6 );
 vex::motor TrayMotor                                 = vex::motor( vex::PORT19 );
 vex::motor LeftIntake   =  vex::motor( vex::PORT7, vex::gearSetting::ratio36_1 );
-vex::motor RightIntake   = vex::motor( vex::PORT1, vex::gearSetting::ratio36_1 );
+vex::motor RightIntake   = vex::motor( vex::PORT9, vex::gearSetting::ratio36_1 );
 
 vex::controller Controller1          = vex::controller();
 
